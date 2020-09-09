@@ -13,6 +13,7 @@ import { MarketData, Question, Token } from '../util/types'
 
 import { ConditionalTokenService } from './conditional_token'
 import { ERC20Service } from './erc20'
+import { GelatoService } from './gelato'
 import { MarketMakerService } from './market_maker'
 import { MarketMakerFactoryService } from './market_maker_factory'
 import { OracleService } from './oracle'
@@ -39,6 +40,7 @@ interface CPKCreateMarketParams {
   conditionalTokens: ConditionalTokenService
   realitio: RealitioService
   marketMakerFactory: MarketMakerFactoryService
+  gelatoAddressStorage: GelatoService
 }
 
 interface CPKAddFundingParams {
@@ -207,6 +209,7 @@ class CPKService {
 
   createMarket = async ({
     conditionalTokens,
+    gelatoAddressStorage,
     marketData,
     marketMakerFactory,
     realitio,
@@ -324,11 +327,41 @@ class CPKService {
         ),
       })
 
-      const txObject = await this.cpk.execTransactions(transactions, txOptions)
-      const txHash = await this.getTransactionHash(txObject)
-      logger.log(`Transaction hash: ${txHash}`)
+      if (marketData.gelatoCondition.isSelectionEnabled) {
+        // console.log('ADDING GELATO TO THE MIX')
 
-      const transaction = await this.provider.waitForTransaction(txObject.hash)
+        // Step 6: Enable Gelato Core as a module if not already done
+        const isGelatoWhitelistedModule = await gelatoAddressStorage.isGelatoWhitelistedModule(this.cpk.address)
+        if (!isGelatoWhitelistedModule) {
+          const enableModuleData = await gelatoAddressStorage.encodeWhitelistGelatoAsModule()
+          transactions.push({
+            to: this.cpk.address,
+            data: enableModuleData,
+          })
+        }
+
+        // Step 7: If automatic withdraw was selected, submit automatic Withdrawal Task to Gelato
+        const submitTaskData = await gelatoAddressStorage.encodeSubmitTimeBasedWithdrawalTask({
+          marketData,
+          conditionalTokensAddress,
+          fpmmAddress: predictedMarketMakerAddress,
+          positionIds: await conditionalTokens.getPositionIds(outcomes.length, conditionId, collateral.address),
+          conditionId,
+          collateralTokenAddress: collateral.address,
+          receiver: account,
+        })
+
+        const gelatoCoreAddress = await gelatoAddressStorage.getGelatoCoreAddress()
+        transactions.push({
+          to: gelatoCoreAddress,
+          data: submitTaskData,
+        })
+      }
+
+      const txObject = await this.cpk.execTransactions(transactions)
+      const txHash = await this.provider.getTransactionHash(txObject)
+      logger.log(`Transaction hash: ${txHash}`)
+      const transaction = await this.provider.waitForTransaction(txHash);
       return {
         transaction,
         marketMakerAddress: predictedMarketMakerAddress,

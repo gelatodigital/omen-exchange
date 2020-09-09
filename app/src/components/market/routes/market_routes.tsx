@@ -2,10 +2,11 @@ import { useInterval } from '@react-corekit/use-interval'
 import React from 'react'
 import { Redirect, RouteComponentProps } from 'react-router'
 
-import { FETCH_DETAILS_INTERVAL } from '../../../common/constants'
-import { useCheckContractExists, useMarketMakerData } from '../../../hooks'
+import { FETCH_DETAILS_INTERVAL, MAX_MARKET_FEE } from '../../../common/constants'
+import { useCheckContractExists, useContracts, useConnectedCPKContext, useMarketMakerData } from '../../../hooks'
 import { useConnectedWeb3Context } from '../../../hooks/connectedWeb3'
-import { MarketDetailsPage } from '../../../pages'
+import { useGelatoSubmittedTasks } from '../../../hooks/useGelatoSubmittedTasks'
+import { MarketBuyPage, MarketDetailsPage, MarketPoolLiquidityPage, MarketSellPage } from '../../../pages'
 import { getLogger } from '../../../util/logger'
 import { isAddress } from '../../../util/tools'
 import { ThreeBoxComments } from '../../comments'
@@ -22,8 +23,11 @@ interface Props {
   marketMakerAddress: string
 }
 
+// Add Gelato Condition Data Fetching here
 const MarketValidation: React.FC<Props> = (props: Props) => {
   const context = useConnectedWeb3Context()
+  const { account, library: provider } = context
+  const cpk = useConnectedCPKContext()
 
   const { marketMakerAddress } = props
 
@@ -31,6 +35,10 @@ const MarketValidation: React.FC<Props> = (props: Props) => {
   const contractExists = useCheckContractExists(marketMakerAddress, context)
   const { fetchData, fetchGraphMarketMakerData, marketMakerData } = useMarketMakerData(marketMakerAddress.toLowerCase())
   useInterval(fetchData, FETCH_DETAILS_INTERVAL)
+  const cpkAddress = '0x9671dC03ec719ff66C561e2dc73411b041548B73'
+  useGelatoSubmittedTasks(cpkAddress, marketMakerAddress, context)
+
+  // useInterval(fetchData, FETCH_DETAILS_INTERVAL)
   if (!contractExists) {
     logger.log(`Market address not found`)
     return <MarketNotFound />
@@ -54,6 +62,7 @@ const MarketValidation: React.FC<Props> = (props: Props) => {
 
 const MarketRoutes = (props: RouteComponentProps<RouteParams>) => {
   const marketMakerAddress = props.match.params.address
+
   if (!isAddress(marketMakerAddress)) {
     logger.log(`Contract address not valid`)
     return <Redirect to="/" />

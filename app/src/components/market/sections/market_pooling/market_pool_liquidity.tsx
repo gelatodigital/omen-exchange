@@ -4,7 +4,7 @@ import React, { useEffect, useMemo, useState } from 'react'
 import { RouteComponentProps, useHistory, withRouter } from 'react-router-dom'
 import styled from 'styled-components'
 
-import { DOCUMENT_FAQ } from '../../../../common/constants'
+import { DEFAULT_GELATO_CONDITION, DOCUMENT_FAQ } from '../../../../common/constants'
 import {
   useCollateralBalance,
   useConnectedCPKContext,
@@ -15,6 +15,7 @@ import {
 } from '../../../../hooks'
 import { ERC20Service } from '../../../../services'
 import { getLogger } from '../../../../util/logger'
+import { getDefaultGelatoCondition } from '../../../../util/networks'
 import { RemoteData } from '../../../../util/remote_data'
 import {
   calcAddFundingSendAmounts,
@@ -23,7 +24,7 @@ import {
   formatBigNumber,
   formatNumber,
 } from '../../../../util/tools'
-import { MarketMakerData, OutcomeTableValue, Status, Ternary, Token } from '../../../../util/types'
+import { GelatoData, MarketMakerData, OutcomeTableValue, Status, Ternary } from '../../../../util/types'
 import { Button, ButtonContainer, ButtonTab } from '../../../button'
 import { ButtonType } from '../../../button/button_styling_types'
 import { BigNumberInput, TextfieldCustomPlaceholder, TitleValue } from '../../../common'
@@ -34,6 +35,7 @@ import { CurrenciesWrapper, GenericError } from '../../common/common_styled'
 import { CurrencySelector } from '../../common/currency_selector'
 import { GridTransactionDetails } from '../../common/grid_transaction_details'
 import { OutcomeTable } from '../../common/outcome_table'
+import { RecommendedServices } from '../../common/recommended_services'
 import { SetAllowance } from '../../common/set_allowance'
 import { TokenBalance } from '../../common/token_balance'
 import { TransactionDetailsCard } from '../../common/transaction_details_card'
@@ -125,11 +127,12 @@ const MarketPoolLiquidityWrapper: React.FC<Props> = (props: Props) => {
   const { address: marketMakerAddress, balances, fee, totalEarnings, totalPoolShares, userEarnings } = marketMakerData
   const history = useHistory()
   const context = useConnectedWeb3Context()
-  const { account, library: provider } = context
+  const { account, library: provider, networkId } = context
   const cpk = useConnectedCPKContext()
 
   const { buildMarketMaker, conditionalTokens } = useContracts(context)
   const marketMaker = buildMarketMaker(marketMakerAddress)
+  const defaultCondition = getDefaultGelatoCondition(networkId)
 
   const signer = useMemo(() => provider.getSigner(), [provider])
   const [allowanceFinished, setAllowanceFinished] = useState(false)
@@ -146,6 +149,7 @@ const MarketPoolLiquidityWrapper: React.FC<Props> = (props: Props) => {
   const [modalTitle, setModalTitle] = useState<string>('')
   const [message, setMessage] = useState<string>('')
   const [isModalTransactionResultOpen, setIsModalTransactionResultOpen] = useState(false)
+  const [gelatoCondition, setGelatoCondition] = useState<GelatoData>(defaultCondition)
 
   useEffect(() => {
     setIsNegativeAmountToFund(formatBigNumber(amountToFund || Zero, collateral.decimals).includes('-'))
@@ -370,6 +374,7 @@ const MarketPoolLiquidityWrapper: React.FC<Props> = (props: Props) => {
   return (
     <>
       <UserData>
+<<<<<<< HEAD
         <UserDataTitleValue
           title="Your Liquidity"
           value={`${formatNumber(formatBigNumber(totalUserLiquidity, collateral.decimals))} ${collateral.symbol}`}
@@ -392,6 +397,41 @@ const MarketPoolLiquidityWrapper: React.FC<Props> = (props: Props) => {
             formatBigNumber(totalEarnings, collateral.decimals),
           )} ${collateral.symbol}`}
         />
+=======
+        <UserDataRow>
+          <UserDataTitleValue
+            title="Your Liquidity"
+            value={`${formatNumber(formatBigNumber(totalUserLiquidity, collateral.decimals))} ${collateral.symbol}`}
+          />
+          <UserDataTitleValue
+            title="Total Pool Tokens"
+            value={`${formatBigNumber(totalPoolShares, collateral.decimals)} ${collateral.symbol}`}
+          />
+        )}
+        {/* <RecommendedServices
+          resolution={values.resolution !== null ? values.resolution : new Date()}
+          gelatoCondition={gelatoCondition}
+          handleGelatoConditionChange={handleGelatoConditionChange}
+          handleGelatoConditionInputsChange={handleGelatoConditionInputsChange}
+          noMarginBottom={false}
+          collateral={collateral}
+        /> */}
+        {activeTab === Tabs.deposit && showSetAllowance && (
+          <SetAllowance
+            collateral={collateral}
+            finished={allowanceFinished && RemoteData.is.success(allowance)}
+            loading={RemoteData.is.asking(allowance)}
+            onUnlock={unlockCollateral}
+          />
+          <UserDataTitleValue
+            state={totalEarnings.gt(0) ? ValueStates.success : undefined}
+            title="Total Earnings"
+            value={`${totalEarnings.gt(0) ? '+' : ''}${formatBigNumber(totalEarnings, collateral.decimals)} ${
+              collateral.symbol
+            }`}
+          />
+        </UserDataRow>
+>>>>>>> task submission and decoding works
       </UserData>
       <OutcomeTable
         balances={balances}

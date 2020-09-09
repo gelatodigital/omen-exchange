@@ -156,6 +156,12 @@ export interface Arbitrator {
   name: string
   url: string
 }
+export interface GelatoData {
+  address: string
+  id: KnownGelatoCondition
+  isSelectionEnabled: boolean
+  inputs: Date | null
+}
 
 export enum Wallet {
   MetaMask = 'MetaMask',
@@ -170,6 +176,7 @@ export interface MarketData {
   question: string
   category: string
   resolution: Date | null
+  gelatoCondition: GelatoData
   arbitrator: Arbitrator
   spread: number
   funding: BigNumber
@@ -355,4 +362,54 @@ export type BuildQueryType = MarketFilters & {
   whitelistedCreators: boolean
   whitelistedTemplateIds: boolean
   networkId: Maybe<number>
+}
+// Gelato Types
+
+export interface GelatoProvider {
+  addr: string
+  module: string
+}
+
+export interface GelatoCondition {
+  inst: string
+  data: string
+}
+
+export enum Operation {
+  Call,
+  Delegatecall,
+}
+
+export enum DataFlow {
+  None,
+  In,
+  Out,
+  InAndOut,
+}
+
+export interface GelatoAction {
+  addr: string
+  data: string
+  value: BigNumber
+  operation: Operation
+  termsOkCheck: boolean
+  dataFlow: DataFlow
+}
+
+export interface Task {
+  conditions: GelatoCondition[]
+  actions: GelatoAction[]
+  selfProviderGasLimit: BigNumber
+  selfProviderGasPriceCeil: BigNumber
+}
+
+export interface TaskReceipt {
+  id: number
+  userProxy: string
+  provider: GelatoProvider
+  index: number
+  tasks: Task[]
+  expiryDate: number
+  cycleId: number
+  submissionsLeft: number
 }
