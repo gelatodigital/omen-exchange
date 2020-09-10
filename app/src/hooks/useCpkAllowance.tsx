@@ -14,7 +14,7 @@ import { useConnectedCPKContext } from './connectedCpk'
  * `updateAllowance` can be used to reload the value of the allowance
  * `unlock` can be used to set unlimited allowance for the cpk
  */
-export const useCpkAllowance = (signer: Signer, tokenAddress: string) => {
+export const useConnectedCPKContextAllowance = (signer: Signer, tokenAddress: string) => {
   const cpk = useConnectedCPKContext()
   const [allowance, setAllowance] = useState<RemoteData<BigNumber>>(RemoteData.notAsked())
 

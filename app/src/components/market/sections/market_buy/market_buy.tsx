@@ -13,7 +13,7 @@ import {
   useConnectedCPKContext,
   useConnectedWeb3Context,
   useContracts,
-  useCpkAllowance,
+  useConnectedCPKContextAllowance,
 } from '../../../../hooks'
 import { MarketMakerService } from '../../../../services'
 import { getLogger } from '../../../../util/logger'
@@ -76,7 +76,7 @@ const MarketBuyWrapper: React.FC<Props> = (props: Props) => {
   const [newShares, setNewShares] = useState<Maybe<BigNumber[]>>(null)
 
   const [allowanceFinished, setAllowanceFinished] = useState(false)
-  const { allowance, unlock } = useCpkAllowance(signer, collateral.address)
+  const { allowance, unlock } = useConnectedCPKContextAllowance(signer, collateral.address)
 
   const hasEnoughAllowance = RemoteData.mapToTernary(allowance, allowance => allowance.gte(amount || Zero))
   const hasZeroAllowance = RemoteData.mapToTernary(allowance, allowance => allowance.isZero())

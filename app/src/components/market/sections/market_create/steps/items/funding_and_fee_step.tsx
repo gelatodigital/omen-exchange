@@ -14,7 +14,7 @@ import {
   useCollateralBalance,
   useConnectedCPKContext,
   useConnectedWeb3Context,
-  useCpkAllowance,
+  useConnectedCPKContextAllowance,
   useTokens,
 } from '../../../../../../hooks'
 import { useGraphMarketsFromQuestion } from '../../../../../../hooks/useGraphMarketsFromQuestion'
@@ -228,7 +228,7 @@ const FundingAndFeeStep: React.FC<Props> = (props: Props) => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
   const [allowanceFinished, setAllowanceFinished] = useState(false)
-  const { allowance, unlock } = useCpkAllowance(signer, collateral.address)
+  const { allowance, unlock } = useConnectedCPKContextAllowance(signer, collateral.address)
 
   const [amount, setAmount] = useState<BigNumber>(funding)
   const [amountToDispaly, setAmountToDisplay] = useState<string>('')

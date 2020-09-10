@@ -10,7 +10,7 @@ import {
   useConnectedCPKContext,
   useConnectedWeb3Context,
   useContracts,
-  useCpkAllowance,
+  useConnectedCPKContextAllowance,
   useFundingBalance,
 } from '../../../../hooks'
 import { ERC20Service } from '../../../../services'
@@ -24,7 +24,7 @@ import {
   formatBigNumber,
   formatNumber,
 } from '../../../../util/tools'
-import { GelatoData, MarketMakerData, OutcomeTableValue, Status, Ternary } from '../../../../util/types'
+import { GelatoData, MarketMakerData, OutcomeTableValue, Status, TaskReceipt, Ternary } from '../../../../util/types'
 import { Button, ButtonContainer, ButtonTab } from '../../../button'
 import { ButtonType } from '../../../button/button_styling_types'
 import { BigNumberInput, TextfieldCustomPlaceholder, TitleValue } from '../../../common'
@@ -45,6 +45,10 @@ import { WarningMessage } from '../../common/warning_message'
 
 interface Props extends RouteComponentProps<any> {
   marketMakerData: MarketMakerData
+  gelatoTask?: {
+    submittedTaskReceipt: TaskReceipt
+    withdrawDate: Date
+  }
   theme?: any
   switchMarketTab: (arg0: string) => void
   fetchGraphMarketMakerData: () => Promise<void>
@@ -123,21 +127,34 @@ const UserData = styled.div`
 const logger = getLogger('Market::Fund')
 
 const MarketPoolLiquidityWrapper: React.FC<Props> = (props: Props) => {
+<<<<<<< HEAD
   const { fetchGraphMarketMakerData, marketMakerData } = props
   const { address: marketMakerAddress, balances, fee, totalEarnings, totalPoolShares, userEarnings } = marketMakerData
   const history = useHistory()
+=======
+  const { gelatoTask, marketMakerData, switchMarketTab } = props
+  const {
+    address: marketMakerAddress,
+    balances,
+    collateral,
+    fee,
+    totalEarnings,
+    totalPoolShares,
+    userEarnings,
+  } = marketMakerData
+
+>>>>>>> -rendering issue
   const context = useConnectedWeb3Context()
   const { account, library: provider, networkId } = context
   const cpk = useConnectedCPKContext()
 
   const { buildMarketMaker, conditionalTokens } = useContracts(context)
   const marketMaker = buildMarketMaker(marketMakerAddress)
-  const defaultCondition = getDefaultGelatoCondition(networkId)
 
   const signer = useMemo(() => provider.getSigner(), [provider])
   const [allowanceFinished, setAllowanceFinished] = useState(false)
   const [collateral, setCollateral] = useState<Token>(marketMakerData.collateral)
-  const { allowance, unlock } = useCpkAllowance(signer, collateral.address)
+  const { allowance, unlock } = useConnectedCPKContextAllowance(signer, collateral.address)
 
   const [amountToFund, setAmountToFund] = useState<Maybe<BigNumber>>(new BigNumber(0))
   const [amountToFundDisplay, setAmountToFundDisplay] = useState<string>('')
@@ -149,7 +166,6 @@ const MarketPoolLiquidityWrapper: React.FC<Props> = (props: Props) => {
   const [modalTitle, setModalTitle] = useState<string>('')
   const [message, setMessage] = useState<string>('')
   const [isModalTransactionResultOpen, setIsModalTransactionResultOpen] = useState(false)
-  const [gelatoCondition, setGelatoCondition] = useState<GelatoData>(defaultCondition)
 
   useEffect(() => {
     setIsNegativeAmountToFund(formatBigNumber(amountToFund || Zero, collateral.decimals).includes('-'))

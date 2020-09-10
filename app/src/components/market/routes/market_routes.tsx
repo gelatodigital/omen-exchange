@@ -25,20 +25,24 @@ interface Props {
 
 // Add Gelato Condition Data Fetching here
 const MarketValidation: React.FC<Props> = (props: Props) => {
+  console.log('Market Routes')
   const context = useConnectedWeb3Context()
   const { account, library: provider } = context
-  const cpk = useConnectedCPKContext()
 
   const { marketMakerAddress } = props
 
   // Validate contract REALLY exists
   const contractExists = useCheckContractExists(marketMakerAddress, context)
-  const { fetchData, fetchGraphMarketMakerData, marketMakerData } = useMarketMakerData(marketMakerAddress.toLowerCase())
-  useInterval(fetchData, FETCH_DETAILS_INTERVAL)
-  const cpkAddress = '0x9671dC03ec719ff66C561e2dc73411b041548B73'
-  useGelatoSubmittedTasks(cpkAddress, marketMakerAddress, context)
 
-  // useInterval(fetchData, FETCH_DETAILS_INTERVAL)
+  const { fetchData, fetchGraphMarketMakerData, marketMakerData } = useMarketMakerData(marketMakerAddress.toLowerCase())
+
+  const cpk = useConnectedCPKContext()
+  const cpkAddress = '0x9671dC03ec719ff66C561e2dc73411b041548B73'
+  const { submittedTaskReceipt, withdrawDate } = useGelatoSubmittedTasks(cpkAddress, marketMakerAddress, context)
+  console.log(submittedTaskReceipt)
+  console.log(withdrawDate)
+
+  useInterval(fetchData, FETCH_DETAILS_INTERVAL)
   if (!contractExists) {
     logger.log(`Market address not found`)
     return <MarketNotFound />
@@ -47,6 +51,42 @@ const MarketValidation: React.FC<Props> = (props: Props) => {
   if (!marketMakerData) {
     return <InlineLoading />
   }
+
+  // <Switch>
+  // <Route
+  //   exact
+  //   path="/:address"
+  //   render={props => (
+  //     <>
+  //       <MarketDetailsPage {...props} marketMakerData={marketMakerData} />
+  //       <ThreeBoxComments threadName={marketMakerAddress} />
+  //     </>
+  //   )}
+  // />
+  // {!account ? (
+  //   <Message text="Please connect to your wallet to open the market..." type={MessageType.warning} />
+  // ) : (
+  //   <Route
+  //     exact
+  //     path="/:address/pool-liquidity"
+  //     render={props => (
+  //       <MarketPoolLiquidityPage
+  //         {...props}
+  //         gelatoTask={
+  //           submittedTaskReceipt !== null && withdrawDate !== null
+  //             ? { submittedTaskReceipt, withdrawDate }
+  //             : undefined
+  //         }
+  //         marketMakerData={marketMakerData}
+  //       />
+  //     )}
+  //   />
+  // )}
+  // {!account ? (
+  //   <Message text="Please connect to your wallet to open the market..." type={MessageType.warning} />
+  // ) : isQuestionFinalized ? (
+  //   <Message text="Market closed, question finalized..." type={MessageType.warning} />
+  // ) : (
 
   return (
     <>

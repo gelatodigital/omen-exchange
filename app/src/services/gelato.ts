@@ -205,6 +205,12 @@ class GelatoService {
     return data
   }
 
+  decodeTimeConditionData = async (hexData: string): Promise<any> => {
+    const data = ethers.utils.defaultAbiCoder.decode(['uint256'], hexData)
+    console.log(data)
+    return data
+  }
+
   isGelatoWhitelistedModule = async (safeAddress: string): Promise<boolean> => {
     const gelatoCoreAddress = await this.getGelatoCoreAddress()
     const gnosisSafe = new ethers.Contract(safeAddress, gnosisSafeAbi, this.provider)

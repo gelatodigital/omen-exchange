@@ -1,17 +1,25 @@
 import React from 'react'
 
-import { MarketMakerData } from '../../../../util/types'
+import { MarketMakerData, TaskReceipt } from '../../../../util/types'
 
 import { MarketPoolLiquidity } from './market_pool_liquidity'
 
 interface Props {
   marketMakerData: MarketMakerData
   fetchGraphMarketMakerData: () => Promise<void>
+  gelatoTask?: {
+    submittedTaskReceipt: TaskReceipt
+    withdrawDate: Date
+  }
   switchMarketTab: (arg0: string) => void
 }
 
 const MarketPoolLiquidityContainer: React.FC<Props> = (props: Props) => {
-  return <MarketPoolLiquidity {...props} />
+  const { marketMakerData, gelatoTask, switchMarketTab } = props
+
+  return (
+    <MarketPoolLiquidity gelatoTask={gelatoTask} marketMakerData={marketMakerData} switchMarketTab={switchMarketTab} />
+  )
 }
 
 export { MarketPoolLiquidityContainer }
