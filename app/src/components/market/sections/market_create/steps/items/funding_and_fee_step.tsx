@@ -463,7 +463,6 @@ const FundingAndFeeStep: React.FC<Props> = (props: Props) => {
         )}
         <RecommendedServices
           isScheduled={false}
-          collateral={collateral}
           gelatoData={values.gelatoData}
           handleGelatoDataChange={handleGelatoDataChange}
           handleGelatoDataInputsChange={handleGelatoDataInputsChange}

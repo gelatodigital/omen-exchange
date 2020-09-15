@@ -1,15 +1,12 @@
-import React, { useEffect, DOMAttributes } from 'react'
+import React, { DOMAttributes } from 'react'
 import styled from 'styled-components'
 
-import { GelatoData, Token, TaskReceiptStatus } from '../../../../util/types'
+import { GelatoData } from '../../../../util/types'
 import { ButtonCircle } from '../../../button'
 import { DateField, FormRow } from '../../../common'
-import { IconAdd } from '../../../common/icons/IconAdd'
 import { IconFilter } from '../../../common/icons/IconFilter'
 import { IconGelato } from '../../../common/icons/IconGelato'
-import { IconRemove } from '../../../common/icons/IconRemove'
 import { GelatoConditions } from '../gelato_conditions'
-import { ToggleTokenLockProps } from '../toggle_token_lock'
 import { IconClock } from '../../../common/icons/IconClock'
 import { IconAlert } from '../../../common/icons/IconAlert'
 import { IconCheckmark } from '../../../common/icons/IconCheckmark'
@@ -152,7 +149,6 @@ const GelatoIconCircle = styled.button<{ active?: boolean }>`
 `
 
 export type RecommendedServicesProps = DOMAttributes<HTMLDivElement> & {
-  collateral: Token
   noMarginBottom: boolean
   resolution: Date
   gelatoData: GelatoData
@@ -167,7 +163,6 @@ export type RecommendedServicesProps = DOMAttributes<HTMLDivElement> & {
 
 export const RecommendedServices: React.FC<RecommendedServicesProps> = (props: RecommendedServicesProps) => {
   const {
-    collateral,
     gelatoData,
     isScheduled,
     handleGelatoDataChange,
@@ -193,7 +188,7 @@ export const RecommendedServices: React.FC<RecommendedServicesProps> = (props: R
 
   const toggleActive = () => {
     if (active) {
-      console.log('deactivate ')
+      // deactivate
       const newGelatoCondition = {
         ...gelatoData,
       }
@@ -201,7 +196,7 @@ export const RecommendedServices: React.FC<RecommendedServicesProps> = (props: R
       handleGelatoDataChange(newGelatoCondition)
       setActive(false)
     } else {
-      console.log('activate')
+      // activate
       const newGelatoCondition = {
         ...gelatoData,
       }
@@ -212,7 +207,6 @@ export const RecommendedServices: React.FC<RecommendedServicesProps> = (props: R
   }
 
   const toggleCustomizable = () => {
-    console.log('Toggle Customizable')
     setCustomizable(!customizable)
   }
 
@@ -360,7 +354,7 @@ export const RecommendedServices: React.FC<RecommendedServicesProps> = (props: R
               gelatoData.inputs,
             )}. Check out the transaction `}
             <span>
-              <a style={{ color: '#1E88E5' }} target="_blank" href={etherscanLink}>
+              <a style={{ color: '#1E88E5' }} target="_blank" rel="noopener noreferrer" href={etherscanLink}>
                 here
               </a>
             </span>

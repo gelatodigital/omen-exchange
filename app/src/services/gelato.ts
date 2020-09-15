@@ -1,13 +1,7 @@
 import { OperationType } from 'contract-proxy-kit/lib/cjs/utils/constants'
 import { Contract, Wallet, ethers, utils } from 'ethers'
-import { TransactionReceipt } from 'ethers/providers'
-import { BigNumber } from 'ethers/utils'
 
-import { getLogger } from '../util/logger'
-import { isAddress, isContract } from '../util/tools'
-import { MarketData, Token, GelatoData, TaskReceipt } from '../util/types'
-
-const logger = getLogger('Services::Erc20')
+import { GelatoData, TaskReceipt } from '../util/types'
 
 const gelatoAddressStorageAbi = [
   'function getAddress(string _key) external view returns (address)',
@@ -144,8 +138,7 @@ class GelatoService {
     if (taskData.gelatoData.inputs === null) throw Error('Need Date')
 
     const timestamp = Date.parse(taskData.gelatoData.inputs.toString()) / 1000
-    console.log(`Withdrawal Scheduled at`)
-    console.log(timestamp)
+
     const condition = {
       inst: this.getAddressFromAddressStorage(gAddresses, 'conditionTime'),
       data: ethers.utils.defaultAbiCoder.encode(['uint'], [timestamp]),

@@ -4,7 +4,7 @@ import React, { useEffect, useMemo, useState } from 'react'
 import { RouteComponentProps, useHistory, withRouter } from 'react-router-dom'
 import styled from 'styled-components'
 
-import { DEFAULT_GELATO_CONDITION, DOCUMENT_FAQ } from '../../../../common/constants'
+import { DOCUMENT_FAQ } from '../../../../common/constants'
 import {
   useCollateralBalance,
   useConnectedCPKContext,
@@ -24,7 +24,7 @@ import {
   formatBigNumber,
   formatNumber,
 } from '../../../../util/tools'
-import { GelatoData, MarketMakerData, OutcomeTableValue, Status, TaskReceipt, Ternary } from '../../../../util/types'
+import { GelatoData, MarketMakerData, OutcomeTableValue, Status, Ternary } from '../../../../util/types'
 import { Button, ButtonContainer, ButtonTab } from '../../../button'
 import { ButtonType } from '../../../button/button_styling_types'
 import { BigNumberInput, TextfieldCustomPlaceholder, TitleValue } from '../../../common'
@@ -42,7 +42,6 @@ import { TransactionDetailsCard } from '../../common/transaction_details_card'
 import { TransactionDetailsLine } from '../../common/transaction_details_line'
 import { TransactionDetailsRow, ValueStates } from '../../common/transaction_details_row'
 import { WarningMessage } from '../../common/warning_message'
-import useTraceUpdate from 'use-trace-update'
 import { useGelatoSubmittedTasks } from '../../../../hooks/useGelatoSubmittedTasks'
 
 interface Props extends RouteComponentProps<any> {
@@ -478,7 +477,6 @@ const MarketPoolLiquidityWrapper: React.FC<Props> = (props: Props) => {
             setGelatoData(gelatoDataCopy)
           }}
           noMarginBottom={false}
-          collateral={collateral}
         />
         */}
         {activeTab === Tabs.deposit && showSetAllowance && (
