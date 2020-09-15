@@ -26,7 +26,6 @@ import { MarketHomeContainer } from '../market/sections/market_list/market_home_
 const RedirectToHome = () => <Redirect to="/" />
 
 export const Main: React.FC = () => {
-  console.log('000000 MAIN 0000000')
   const context = useWeb3Context()
   return (
     <Router>

@@ -199,7 +199,7 @@ const MarketHomeContainer: React.FC = () => {
     notifyOnNetworkStatusChange: true,
   })
 
-  // useInterval(() => setNow(calcNow), 1000 * 60 * 5)
+  useInterval(() => setNow(calcNow), 1000 * 60 * 5)
 
   useEffect(() => {
     const getCpkAddress = async () => {

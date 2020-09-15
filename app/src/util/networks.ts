@@ -327,9 +327,6 @@ interface KnownArbitratorData {
 
 interface KnownGelatoConditionData {
   id: string
-  addresses: {
-    [networkId: number]: string
-  }
   shouldSubmit: boolean
   inputs: Date | null
 }
@@ -359,10 +356,6 @@ export const knownArbitrators: { [name in KnownArbitrator]: KnownArbitratorData 
 export const knownGelatoConditions: { [name in KnownGelatoCondition]: KnownGelatoConditionData } = {
   time: {
     id: 'time',
-    addresses: {
-      [networkIds.MAINNET]: '0x63129681c487d231aa9148e1e21837165f38deaf',
-      [networkIds.RINKEBY]: '0x26d72d7AE606B5FCbBD0417fa112E7b4aBF05aE2',
-    },
     shouldSubmit: false,
     inputs: null,
   },
@@ -385,17 +378,11 @@ export const getArbitrator = (networkId: number, arbitratorId: KnownArbitrator):
   }
 }
 
-export const getGelatoCondition = (networkId: number, conditionId: KnownGelatoCondition): GelatoData => {
+export const getGelatoCondition = (conditionId: KnownGelatoCondition): GelatoData => {
   const condition = knownGelatoConditions[conditionId]
-  const address = condition.addresses[networkId]
-
-  if (!address) {
-    throw new Error(`Unsupported network id: '${networkId}'`)
-  }
 
   return {
     id: conditionId,
-    address,
     shouldSubmit: condition.shouldSubmit,
     inputs: null,
   }
@@ -414,7 +401,7 @@ export const getDefaultGelatoData = (networkId: number): GelatoData => {
     throw new Error(`Unsupported network id: '${networkId}'`)
   }
 
-  return getGelatoCondition(networkId, DEFAULT_GELATO_CONDITION)
+  return getGelatoCondition(DEFAULT_GELATO_CONDITION)
 }
 
 export const getArbitratorFromAddress = (networkId: number, address: string): Arbitrator => {
@@ -461,21 +448,6 @@ export const getKnowArbitratorFromAddress = (networkId: number, address: string)
   }
 
   return 'unknown' as KnownArbitrator
-}
-
-export const getKnowGelatoConditionFromAddress = (networkId: number, address: string): KnownGelatoCondition => {
-  for (const key in knownGelatoConditions) {
-    const conditionAddress = knownGelatoConditions[key as KnownGelatoCondition].addresses[networkId]
-    if (!conditionAddress) {
-      continue
-    }
-
-    if (conditionAddress.toLowerCase() === address.toLowerCase()) {
-      return key as KnownGelatoCondition
-    }
-  }
-
-  return 'unknown' as KnownGelatoCondition
 }
 
 export const getRealitioTimeout = (networkId: number): number => {
@@ -526,19 +498,14 @@ export const getGelatoConditionByNetwork = (networkId: number): GelatoData[] => 
 
   return Object.values(knownGelatoConditions)
     .map(condition => {
-      const address = condition.addresses[networkId]
-      if (address) {
-        const { inputs, shouldSubmit } = condition
-        const id = getKnowGelatoConditionFromAddress(networkId, address)
+      const { inputs, shouldSubmit } = condition
+      const id = condition.id as KnownGelatoCondition
 
-        return {
-          id,
-          address,
-          inputs,
-          shouldSubmit,
-        }
+      return {
+        id,
+        inputs,
+        shouldSubmit,
       }
-      return null
     })
     .filter(isNotNull)
 }
