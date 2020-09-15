@@ -10,7 +10,7 @@ import { MarketCreationStatus } from '../../../../util/market_creation_status_da
 import {
   getArbitrator,
   getDefaultArbitrator,
-  getDefaultGelatoCondition,
+  getDefaultGelatoData,
   getDefaultToken,
   getToken,
 } from '../../../../util/networks'
@@ -35,7 +35,7 @@ export const MarketWizardCreator = (props: Props) => {
 
   const defaultCollateral = getDefaultToken(networkId)
   const defaultArbitrator = getDefaultArbitrator(networkId)
-  const defaultCondition = getDefaultGelatoCondition(networkId)
+  const defaultGelatoData = getDefaultGelatoData(networkId)
 
   const getImportQuestionId = () => {
     const reQuestionId = /(0x[0-9A-Fa-f]{64})/
@@ -68,7 +68,7 @@ export const MarketWizardCreator = (props: Props) => {
     ],
     question: '',
     resolution: null,
-    gelatoCondition: defaultCondition,
+    gelatoData: defaultGelatoData,
     spread: MARKET_FEE,
   }
 
@@ -271,19 +271,19 @@ export const MarketWizardCreator = (props: Props) => {
     setMarketdata(newMarketData)
   }
 
-  const handleGelatoConditionChange = (gelatoCondition: GelatoData) => {
+  const handleGelatoDataChange = (gelatoData: GelatoData) => {
     const newMarketData = {
       ...marketData,
-      gelatoCondition,
+      gelatoData,
     }
     setMarketdata(newMarketData)
   }
 
-  const handleGelatoConditionInputsChange = (inputs: Date | null) => {
+  const handleGelatoDataInputsChange = (inputs: Date | null) => {
     const newMarketData = {
       ...marketData,
     }
-    newMarketData.gelatoCondition.inputs = inputs
+    newMarketData.gelatoData.inputs = inputs
     setMarketdata(newMarketData)
   }
 
@@ -310,8 +310,8 @@ export const MarketWizardCreator = (props: Props) => {
             back={() => back()}
             handleChange={handleChange}
             handleCollateralChange={handleCollateralChange}
-            handleGelatoConditionChange={handleGelatoConditionChange}
-            handleGelatoConditionInputsChange={handleGelatoConditionInputsChange}
+            handleGelatoDataChange={handleGelatoDataChange}
+            handleGelatoDataInputsChange={handleGelatoDataInputsChange}
             handleTradingFeeChange={handleTradingFeeChange}
             marketCreationStatus={marketCreationStatus}
             resetTradingFee={resetTradingFee}

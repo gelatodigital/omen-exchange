@@ -336,7 +336,7 @@ interface KnownGelatoConditionData {
   addresses: {
     [networkId: number]: string
   }
-  isSelectionEnabled: boolean
+  shouldSubmit: boolean
   inputs: Date | null
 }
 
@@ -369,7 +369,7 @@ export const knownGelatoConditions: { [name in KnownGelatoCondition]: KnownGelat
       [networkIds.MAINNET]: '0x63129681c487d231aa9148e1e21837165f38deaf',
       [networkIds.RINKEBY]: '0x26d72d7AE606B5FCbBD0417fa112E7b4aBF05aE2',
     },
-    isSelectionEnabled: false,
+    shouldSubmit: false,
     inputs: null,
   },
 }
@@ -402,7 +402,7 @@ export const getGelatoCondition = (networkId: number, conditionId: KnownGelatoCo
   return {
     id: conditionId,
     address,
-    isSelectionEnabled: condition.isSelectionEnabled,
+    shouldSubmit: condition.shouldSubmit,
     inputs: null,
   }
 }
@@ -415,7 +415,7 @@ export const getDefaultArbitrator = (networkId: number): Arbitrator => {
   return getArbitrator(networkId, DEFAULT_ARBITRATOR)
 }
 
-export const getDefaultGelatoCondition = (networkId: number): GelatoData => {
+export const getDefaultGelatoData = (networkId: number): GelatoData => {
   if (!validNetworkId(networkId)) {
     throw new Error(`Unsupported network id: '${networkId}'`)
   }
@@ -534,14 +534,14 @@ export const getGelatoConditionByNetwork = (networkId: number): GelatoData[] => 
     .map(condition => {
       const address = condition.addresses[networkId]
       if (address) {
-        const { inputs, isSelectionEnabled } = condition
+        const { inputs, shouldSubmit } = condition
         const id = getKnowGelatoConditionFromAddress(networkId, address)
 
         return {
           id,
           address,
           inputs,
-          isSelectionEnabled,
+          shouldSubmit,
         }
       }
       return null

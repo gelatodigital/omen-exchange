@@ -5,7 +5,7 @@ import { Redirect, RouteComponentProps } from 'react-router'
 import { FETCH_DETAILS_INTERVAL, MAX_MARKET_FEE } from '../../../common/constants'
 import { useCheckContractExists, useContracts, useConnectedCPKContext, useMarketMakerData } from '../../../hooks'
 import { useConnectedWeb3Context } from '../../../hooks/connectedWeb3'
-import { useGelatoSubmittedTasks } from '../../../hooks/useGelatoSubmittedTasks'
+// import { useGelatoSubmittedTasks } from '../../../hooks/useGelatoSubmittedTasks'
 import { MarketBuyPage, MarketDetailsPage, MarketPoolLiquidityPage, MarketSellPage } from '../../../pages'
 import { getLogger } from '../../../util/logger'
 import { isAddress } from '../../../util/tools'
@@ -35,12 +35,6 @@ const MarketValidation: React.FC<Props> = (props: Props) => {
   const contractExists = useCheckContractExists(marketMakerAddress, context)
 
   const { fetchData, fetchGraphMarketMakerData, marketMakerData } = useMarketMakerData(marketMakerAddress.toLowerCase())
-
-  const cpk = useConnectedCPKContext()
-  const cpkAddress = '0x9671dC03ec719ff66C561e2dc73411b041548B73'
-  const { submittedTaskReceipt, withdrawDate } = useGelatoSubmittedTasks(cpkAddress, marketMakerAddress, context)
-  console.log(submittedTaskReceipt)
-  console.log(withdrawDate)
 
   useInterval(fetchData, FETCH_DETAILS_INTERVAL)
   if (!contractExists) {

@@ -3,6 +3,7 @@ import React from 'react'
 import { MarketMakerData, TaskReceipt } from '../../../../util/types'
 
 import { MarketPoolLiquidity } from './market_pool_liquidity'
+import useTraceUpdate from 'use-trace-update'
 
 interface Props {
   marketMakerData: MarketMakerData
@@ -15,10 +16,13 @@ interface Props {
 }
 
 const MarketPoolLiquidityContainer: React.FC<Props> = (props: Props) => {
-  const { marketMakerData, gelatoTask, switchMarketTab } = props
+  const { marketMakerData, /*gelatoTask*/ switchMarketTab } = props
 
   return (
-    <MarketPoolLiquidity gelatoTask={gelatoTask} marketMakerData={marketMakerData} switchMarketTab={switchMarketTab} />
+    <MarketPoolLiquidity
+      /*gelatoTask={gelatoTask}*/ marketMakerData={marketMakerData}
+      switchMarketTab={switchMarketTab}
+    />
   )
 }
 

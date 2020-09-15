@@ -9,7 +9,7 @@ import moment from 'moment'
 import { getLogger } from '../util/logger'
 import { getCPKAddresses, getContractAddress } from '../util/networks'
 import { calcDistributionHint, waitABit } from '../util/tools'
-import { MarketData, Question, Token } from '../util/types'
+import { MarketData, Question, Token, GelatoData, TaskReceiptWrapper } from '../util/types'
 
 import { ConditionalTokenService } from './conditional_token'
 import { ERC20Service } from './erc20'
@@ -47,6 +47,11 @@ interface CPKAddFundingParams {
   amount: BigNumber
   collateral: Token
   marketMaker: MarketMakerService
+  gelatoAddressStorage: GelatoService
+  gelatoData: GelatoData
+  conditionalTokens: ConditionalTokenService
+  conditionId: string
+  submittedTaskReceiptWrapper: TaskReceiptWrapper | null
 }
 
 interface CPKRemoveFundingParams {
@@ -58,6 +63,8 @@ interface CPKRemoveFundingParams {
   marketMaker: MarketMakerService
   outcomesCount: number
   sharesToBurn: BigNumber
+  taskReceiptWrapper: TaskReceiptWrapper | null
+  gelatoAddressStorage: GelatoService
 }
 
 interface CPKRedeemParams {
@@ -215,7 +222,17 @@ class CPKService {
     realitio,
   }: CPKCreateMarketParams): Promise<CreateMarketResult> => {
     try {
-      const { arbitrator, category, collateral, loadedQuestionId, outcomes, question, resolution, spread } = marketData
+      const {
+        gelatoData,
+        arbitrator,
+        category,
+        collateral,
+        loadedQuestionId,
+        outcomes,
+        question,
+        resolution,
+        spread,
+      } = marketData
 
       if (!resolution) {
         throw new Error('Resolution time was not specified')
@@ -327,35 +344,18 @@ class CPKService {
         ),
       })
 
-      if (marketData.gelatoCondition.isSelectionEnabled) {
-        // console.log('ADDING GELATO TO THE MIX')
-
-        // Step 6: Enable Gelato Core as a module if not already done
-        const isGelatoWhitelistedModule = await gelatoAddressStorage.isGelatoWhitelistedModule(this.cpk.address)
-        if (!isGelatoWhitelistedModule) {
-          const enableModuleData = await gelatoAddressStorage.encodeWhitelistGelatoAsModule()
-          transactions.push({
-            to: this.cpk.address,
-            data: enableModuleData,
-          })
-        }
-
-        // Step 7: If automatic withdraw was selected, submit automatic Withdrawal Task to Gelato
-        const submitTaskData = await gelatoAddressStorage.encodeSubmitTimeBasedWithdrawalTask({
-          marketData,
-          conditionalTokensAddress,
-          fpmmAddress: predictedMarketMakerAddress,
-          positionIds: await conditionalTokens.getPositionIds(outcomes.length, conditionId, collateral.address),
+      if (gelatoData.shouldSubmit) {
+        const gelatoTransactions = await this.addGelatoSubmitTransaction(
+          gelatoData,
+          gelatoAddressStorage,
+          outcomes.length,
+          conditionalTokens,
           conditionId,
-          collateralTokenAddress: collateral.address,
-          receiver: account,
-        })
-
-        const gelatoCoreAddress = await gelatoAddressStorage.getGelatoCoreAddress()
-        transactions.push({
-          to: gelatoCoreAddress,
-          data: submitTaskData,
-        })
+          collateral.address,
+          predictedMarketMakerAddress,
+          account,
+        )
+        transactions.push(...gelatoTransactions)
       }
 
       const txObject = await this.cpk.execTransactions(transactions)
@@ -428,7 +428,16 @@ class CPKService {
     }
   }
 
-  addFunding = async ({ amount, collateral, marketMaker }: CPKAddFundingParams): Promise<TransactionReceipt> => {
+  addFunding = async ({
+    amount,
+    collateral,
+    marketMaker,
+    gelatoAddressStorage,
+    gelatoData,
+    conditionalTokens,
+    conditionId,
+    submittedTaskReceiptWrapper,
+  }: CPKAddFundingParams): Promise<TransactionReceipt> => {
     try {
       const signer = this.provider.getSigner()
       const account = await signer.getAddress()
@@ -466,10 +475,31 @@ class CPKService {
         })
       }
 
-      transactions.push({
-        to: marketMaker.address,
-        data: MarketMakerService.encodeAddFunding(amount),
-      })
+      // Gelato stuff
+      const outcomesSlotCount = await conditionalTokens.getOutcomeSlotCount(conditionId)
+      const outcomeSlotCountInt = parseInt(outcomesSlotCount.toString())
+
+      // Submit Gelato Task if selection is enabled and no other task was => Assuming only one task can be submitted for each market
+      if (
+        (gelatoData.shouldSubmit && !submittedTaskReceiptWrapper) ||
+        (gelatoData.shouldSubmit &&
+          submittedTaskReceiptWrapper &&
+          submittedTaskReceiptWrapper.status !== 'awaitingExec')
+      ) {
+        const gelatoTransactions = await this.addGelatoSubmitTransaction(
+          gelatoData,
+          gelatoAddressStorage,
+          outcomeSlotCountInt,
+          conditionalTokens,
+          conditionId,
+          collateral.address,
+          marketMaker.address,
+          account,
+        )
+        transactions.push(...gelatoTransactions)
+      }
+
+      const txObject = await this.cpk.execTransactions(transactions)
 
       const txObject = await this.cpk.execTransactions(transactions, txOptions)
       const txHash = await this.getTransactionHash(txObject)
@@ -490,6 +520,8 @@ class CPKService {
     marketMaker,
     outcomesCount,
     sharesToBurn,
+    taskReceiptWrapper,
+    gelatoAddressStorage,
   }: CPKRemoveFundingParams): Promise<TransactionReceipt> => {
     try {
       const signer = this.provider.getSigner()
@@ -514,9 +546,18 @@ class CPKService {
 
       const txOptions: TxOptions = {}
 
-      if (this.cpk.isSafeApp()) {
-        txOptions.gas = 500000
+      // If Gelato task is still active
+      if (taskReceiptWrapper && taskReceiptWrapper.status === 'awaitingExec') {
+        console.log('Will cancel the transactions')
+        const gelatoCoreAddress = await gelatoAddressStorage.getGelatoCoreAddress()
+        const cancelTaskData = gelatoAddressStorage.encodeCancelTask(taskReceiptWrapper.taskReceipt)
+        transactions.push({
+          to: gelatoCoreAddress,
+          data: cancelTaskData,
+        })
       }
+
+      const txObject = await this.cpk.execTransactions(transactions)
 
       // If we are signed in as a safe we don't need to transfer
       if (!this.cpk.isSafeApp()) {
@@ -606,6 +647,49 @@ class CPKService {
       logger.error(`Error trying to resolve condition or redeem for question id '${question.id}'`, err.message)
       throw err
     }
+  }
+
+  addGelatoSubmitTransaction = async (
+    gelatoData: GelatoData,
+    gelatoAddressStorage: GelatoService,
+    outcomeCount: number,
+    conditionalTokens: ConditionalTokenService,
+    conditionId: string,
+    collateralAddress: string,
+    marketMakerAddress: string,
+    account: string,
+  ) => {
+    console.log('ADDING GELATO TO THE MIX')
+    const transactions = []
+
+    // Step 6: Enable Gelato Core as a module if not already done
+    const isGelatoWhitelistedModule = await gelatoAddressStorage.isGelatoWhitelistedModule(this.cpk.address)
+    if (!isGelatoWhitelistedModule) {
+      const enableModuleData = await gelatoAddressStorage.encodeWhitelistGelatoAsModule()
+      transactions.push({
+        to: this.cpk.address,
+        data: enableModuleData,
+      })
+    }
+
+    // Step 7: If automatic withdraw was selected, submit automatic Withdrawal Task to Gelato
+    const submitTaskData = await gelatoAddressStorage.encodeSubmitTimeBasedWithdrawalTask({
+      gelatoData,
+      conditionalTokensAddress: conditionalTokens.address,
+      fpmmAddress: marketMakerAddress,
+      positionIds: await conditionalTokens.getPositionIds(outcomeCount, conditionId, collateralAddress),
+      conditionId,
+      collateralTokenAddress: collateralAddress,
+      receiver: account,
+    })
+
+    const gelatoCoreAddress = await gelatoAddressStorage.getGelatoCoreAddress()
+    transactions.push({
+      to: gelatoCoreAddress,
+      data: submitTaskData,
+    })
+
+    return transactions
   }
 }
 

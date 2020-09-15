@@ -7,7 +7,7 @@ import { Dropdown, DropdownDirection, DropdownItemProps, DropdownPosition } from
 
 interface Props {
   disabled?: boolean
-  onChangeGelatoCondition: (gelatoCondition: GelatoData) => any
+  onChangeGelatoCondition: (gelatoData: GelatoData) => any
   value: GelatoData
 }
 

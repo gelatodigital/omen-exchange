@@ -68,7 +68,10 @@ export const useContracts = (context: ConnectedWeb3Context) => {
   const dxTCR = useMemo(() => new DxTCRService(dxTCRAddress, provider), [provider, dxTCRAddress])
 
   const gelatoAddressStorageAddress = getContractAddress(networkId, 'gelatoAddressStorage')
-  const gelatoAddressStorage = new GelatoService(provider, account, gelatoAddressStorageAddress)
+  const gelatoAddressStorage = useMemo(() => new GelatoService(provider, account, gelatoAddressStorageAddress), [
+    provider,
+    gelatoAddressStorageAddress,
+  ])
 
   return useMemo(
     () => ({

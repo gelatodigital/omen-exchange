@@ -5,7 +5,7 @@ import { BigNumber } from 'ethers/utils'
 
 import { getLogger } from '../util/logger'
 import { isAddress, isContract } from '../util/tools'
-import { MarketData, Token } from '../util/types'
+import { MarketData, Token, GelatoData, TaskReceipt } from '../util/types'
 
 const logger = getLogger('Services::Erc20')
 
@@ -29,7 +29,7 @@ const gnosisSafeAbi = [
 ]
 
 interface SubmitTimeBasedWithdrawalData {
-  marketData: MarketData
+  gelatoData: GelatoData
   conditionalTokensAddress: string
   fpmmAddress: string
   positionIds: number[]
@@ -133,11 +133,7 @@ class GelatoService {
       'actionWithdrawLiquidityOmen',
     ])
 
-    console.log(gAddresses)
-
     const gelatoCoreAddress = this.getAddressFromAddressStorage(gAddresses, 'gelatoCore')
-    console.log(gelatoCoreAddress)
-    console.log(gAddresses[0].key)
     const gelatoCore = new ethers.Contract(gelatoCoreAddress, gelatoCoreAbi, this.provider)
 
     const gelatoProvider = {
@@ -145,10 +141,11 @@ class GelatoService {
       module: this.getAddressFromAddressStorage(gAddresses, 'providerModuleGnosisSafe'),
     }
 
-    if (taskData.marketData.gelatoCondition.inputs === null) throw Error('Need Date')
+    if (taskData.gelatoData.inputs === null) throw Error('Need Date')
 
-    const timestamp = Date.parse(taskData.marketData.gelatoCondition.inputs.toString()) / 1000
-    console.log(`Timestamp: ${timestamp}`)
+    const timestamp = Date.parse(taskData.gelatoData.inputs.toString()) / 1000
+    console.log(`Withdrawal Scheduled at`)
+    console.log(timestamp)
     const condition = {
       inst: this.getAddressFromAddressStorage(gAddresses, 'conditionTime'),
       data: ethers.utils.defaultAbiCoder.encode(['uint'], [timestamp]),
@@ -175,9 +172,6 @@ class GelatoService {
       termsOkCheck: false,
     }
 
-    console.log(condition)
-    console.log(action)
-
     const task = {
       conditions: [condition],
       actions: [action],
@@ -188,6 +182,11 @@ class GelatoService {
     const expiryDate = 0 // Not expiring
 
     return gelatoCore.interface.functions.submitTask.encode([gelatoProvider, task, expiryDate])
+  }
+
+  encodeCancelTask = (taskReceipt: TaskReceipt): string => {
+    const gelatoCoreInterface = new ethers.utils.Interface(gelatoCoreAbi)
+    return gelatoCoreInterface.functions.cancelTask.encode([taskReceipt])
   }
 
   encodeWhitelistGelatoAsModule = async (): Promise<string> => {
@@ -201,13 +200,11 @@ class GelatoService {
       ['address', 'address', 'uint256[]', 'bytes32', 'bytes32', 'address', 'address'],
       ethers.utils.hexDataSlice(hexData, 4),
     )
-    console.log(data)
     return data
   }
 
   decodeTimeConditionData = async (hexData: string): Promise<any> => {
     const data = ethers.utils.defaultAbiCoder.decode(['uint256'], hexData)
-    console.log(data)
     return data
   }
 
@@ -215,12 +212,10 @@ class GelatoService {
     const gelatoCoreAddress = await this.getGelatoCoreAddress()
     const gnosisSafe = new ethers.Contract(safeAddress, gnosisSafeAbi, this.provider)
     const modules = await gnosisSafe.getModules()
-    console.log(modules)
     let isModule = false
     modules.forEach((module: string) => {
       if (ethers.utils.getAddress(module) === ethers.utils.getAddress(gelatoCoreAddress)) isModule = true
     })
-    console.log(isModule ? 'Gelato already Whitelisted' : 'Gelato not yet whitelited')
     return isModule
   }
 }

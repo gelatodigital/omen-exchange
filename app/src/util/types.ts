@@ -159,7 +159,7 @@ export interface Arbitrator {
 export interface GelatoData {
   address: string
   id: KnownGelatoCondition
-  isSelectionEnabled: boolean
+  shouldSubmit: boolean
   inputs: Date | null
 }
 
@@ -176,7 +176,7 @@ export interface MarketData {
   question: string
   category: string
   resolution: Date | null
-  gelatoCondition: GelatoData
+  gelatoData: GelatoData
   arbitrator: Arbitrator
   spread: number
   funding: BigNumber
@@ -413,3 +413,32 @@ export interface TaskReceipt {
   cycleId: number
   submissionsLeft: number
 }
+
+export interface TaskReceiptWrapper {
+  user: string
+  taskReceipt: TaskReceipt
+  submissionHash: string
+  status: string
+  submissionDate: number
+  selectedExecutor: string
+  executionDate: number
+  executionHash: string
+  selfProvided: boolean
+}
+
+export enum TaskReceiptStatus {
+  awaitingExec,
+  execSuccess,
+  execReverted,
+  canceled,
+  expired,
+}
+
+// export interface GelatoTaskData {
+//   conditionalToken: string
+//   marketMaker: string
+//   positionId: number[]
+//   conditionId: string
+//   collateral: string
+//   receiver: string
+// }

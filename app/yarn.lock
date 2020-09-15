@@ -23422,6 +23422,11 @@ use-local-storage-state@^2.0.0:
   resolved "https://registry.yarnpkg.com/use-local-storage-state/-/use-local-storage-state-2.0.0.tgz#137063f514967a8e05d410e9e3d67247a0cd0e62"
   integrity sha512-Q2dw4iwfrrYtrgO2Mt5crWowEql9x6HlG3DBs6tMIYIK7S0Z43semJwUq87n1hdtCFCPQ/NRRkMD9wYOILPrTw==
 
+use-trace-update@^1.3.0:
+  version "1.3.0"
+  resolved "https://registry.yarnpkg.com/use-trace-update/-/use-trace-update-1.3.0.tgz#27c04a080d8af5df23be7a9579ab5123ea871830"
+  integrity sha512-VMhNnpoMUKm3Upm7zMe+Tn9uvul9wp9hF6RF+0iGeCdNeH+lt+CkSyr9QA18aNgFsDSwvDu6lxJ3Cqlqn0PYJQ==
+
 use@^3.1.0:
   version "3.1.1"
   resolved "https://registry.yarnpkg.com/use/-/use-3.1.1.tgz#d50c8cac79a19fbc20f2911f56eb973f4e10070f"
