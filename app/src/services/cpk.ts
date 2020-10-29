@@ -223,10 +223,10 @@ class CPKService {
   }: CPKCreateMarketParams): Promise<CreateMarketResult> => {
     try {
       const {
-        gelatoData,
         arbitrator,
         category,
         collateral,
+        gelatoData,
         loadedQuestionId,
         outcomes,
         question,
@@ -431,11 +431,11 @@ class CPKService {
   addFunding = async ({
     amount,
     collateral,
-    marketMaker,
+    conditionId,
+    conditionalTokens,
     gelatoAddressStorage,
     gelatoData,
-    conditionalTokens,
-    conditionId,
+    marketMaker,
     submittedTaskReceiptWrapper,
   }: CPKAddFundingParams): Promise<TransactionReceipt> => {
     try {
@@ -517,11 +517,11 @@ class CPKService {
     conditionId,
     conditionalTokens,
     earnings,
+    gelatoAddressStorage,
     marketMaker,
     outcomesCount,
     sharesToBurn,
     taskReceiptWrapper,
-    gelatoAddressStorage,
   }: CPKRemoveFundingParams): Promise<TransactionReceipt> => {
     try {
       const signer = this.provider.getSigner()

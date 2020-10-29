@@ -124,9 +124,23 @@ const UserData = styled.div`
 const logger = getLogger('Market::Fund')
 
 const MarketPoolLiquidityWrapper: React.FC<Props> = (props: Props) => {
+<<<<<<< HEAD
   const { fetchGraphMarketMakerData, marketMakerData } = props
   const { address: marketMakerAddress, balances, fee, totalEarnings, totalPoolShares, userEarnings } = marketMakerData
   const history = useHistory()
+=======
+  const { /*gelatoTask ,*/ marketMakerData, switchMarketTab } = props
+  const {
+    address: marketMakerAddress,
+    balances,
+    collateral,
+    fee,
+    totalEarnings,
+    totalPoolShares,
+    userEarnings,
+  } = marketMakerData
+
+>>>>>>> rebased origin master
   const context = useConnectedWeb3Context()
   const { account, library: provider, networkId } = context
   const cpk = useConnectedCPKContext()
@@ -480,6 +494,7 @@ const MarketPoolLiquidityWrapper: React.FC<Props> = (props: Props) => {
             loading={RemoteData.is.asking(allowance)}
             onUnlock={unlockCollateral}
           />
+
           <UserDataTitleValue
             state={totalEarnings.gt(0) ? ValueStates.success : undefined}
             title="Total Earnings"

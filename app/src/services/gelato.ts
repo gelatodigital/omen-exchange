@@ -1,7 +1,6 @@
-import { OperationType } from 'contract-proxy-kit/lib/cjs/utils/constants'
 import { Contract, Wallet, ethers, utils } from 'ethers'
 
-import { GelatoData, TaskReceipt } from '../util/types'
+import { GelatoData, Operation, TaskReceipt } from '../util/types'
 
 const gelatoAddressStorageAbi = [
   'function getAddress(string _key) external view returns (address)',
@@ -159,7 +158,7 @@ class GelatoService {
     const action = {
       addr: this.getAddressFromAddressStorage(gAddresses, 'actionWithdrawLiquidityOmen'),
       data: actionWithdrawLiquidityData,
-      operation: OperationType.DelegateCall,
+      operation: Operation.Delegatecall,
       dataFlow: 0, // None,
       value: 0, // None,
       termsOkCheck: false,

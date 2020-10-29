@@ -2,9 +2,9 @@ import React from 'react'
 
 export const IconClock = () => (
   <svg
-    id="Capa_1"
+    enableBackground="new 0 0 443.294 443.294"
     fill="green"
-    enable-background="new 0 0 443.294 443.294"
+    id="Capa_1"
     viewBox="0 0 443.294 443.294"
     xmlns="http://www.w3.org/2000/svg"
   >

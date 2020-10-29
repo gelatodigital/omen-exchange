@@ -94,7 +94,7 @@ export const useGelatoSubmittedTasks = (
         const result = await fetchGelatoSubgraph(networkId, cpkAddress.toLowerCase(), 0)
         const taskReceiptWrappers = result.data.taskReceiptWrappers as TaskReceiptWrapper[]
         // For every TaskReceipt
-        let wrappers = [] as TaskReceiptWrapper[]
+        const wrappers = [] as TaskReceiptWrapper[]
         for (const wrapper of taskReceiptWrappers) {
           const taskData: string = wrapper.taskReceipt.tasks[0].actions[0].data
           const decodedData = await gelatoAddressStorage.decodeSubmitTimeBasedWithdrawalTask(taskData)

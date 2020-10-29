@@ -1,17 +1,17 @@
 import React, { DOMAttributes } from 'react'
 import styled from 'styled-components'
 
+import { formatDate } from '../../../../util/tools'
 import { GelatoData } from '../../../../util/types'
 import { ButtonCircle } from '../../../button'
 import { DateField, FormRow } from '../../../common'
-import { IconFilter } from '../../../common/icons/IconFilter'
-import { IconGelato } from '../../../common/icons/IconGelato'
-import { GelatoConditions } from '../gelato_conditions'
-import { IconClock } from '../../../common/icons/IconClock'
 import { IconAlert } from '../../../common/icons/IconAlert'
 import { IconCheckmark } from '../../../common/icons/IconCheckmark'
 import { IconCheckmarkFilled } from '../../../common/icons/IconCheckmarkFilled'
-import { formatDate } from '../../../../util/tools'
+import { IconClock } from '../../../common/icons/IconClock'
+import { IconFilter } from '../../../common/icons/IconFilter'
+import { IconGelato } from '../../../common/icons/IconGelato'
+import { GelatoConditions } from '../gelato_conditions'
 
 const Wrapper = styled.div<{ noMarginBottom: boolean }>`
   ${props => (props.noMarginBottom ? 'margin-bottom: 0;' : 'margin-bottom: 24px')};
@@ -163,15 +163,15 @@ export type RecommendedServicesProps = DOMAttributes<HTMLDivElement> & {
 
 export const RecommendedServices: React.FC<RecommendedServicesProps> = (props: RecommendedServicesProps) => {
   const {
+    collateralToWithdraw,
+    etherscanLink,
     gelatoData,
-    isScheduled,
     handleGelatoDataChange,
     handleGelatoDataInputsChange,
+    isScheduled,
     noMarginBottom,
     resolution,
-    collateralToWithdraw,
     taskStatus,
-    etherscanLink,
     ...restProps
   } = props
 
@@ -233,9 +233,9 @@ export const RecommendedServices: React.FC<RecommendedServicesProps> = (props: R
   }
 
   const getTaskStatus = (status: string, withdrawalDate: Date) => {
+    const displayText = getCorrectTimeString(withdrawalDate)
     switch (status) {
       case 'awaitingExec':
-        const displayText = getCorrectTimeString(withdrawalDate)
         return (
           <TaskStatusBox>
             <TaskStatus color="green">{`scheduled in ${displayText}`}</TaskStatus>
@@ -293,10 +293,10 @@ export const RecommendedServices: React.FC<RecommendedServicesProps> = (props: R
 
             {!active && (
               <ButtonCircleStyled
-                style={{ backgroundColor: 'white' }}
                 active={true}
                 disabled={false}
                 onClick={toggleActive}
+                style={{ backgroundColor: 'white' }}
               >
                 <IconStyled color={'blue'}>
                   <IconCheckmark />
@@ -354,7 +354,7 @@ export const RecommendedServices: React.FC<RecommendedServicesProps> = (props: R
               gelatoData.inputs,
             )}. Check out the transaction `}
             <span>
-              <a style={{ color: '#1E88E5' }} target="_blank" rel="noopener noreferrer" href={etherscanLink}>
+              <a href={etherscanLink} rel="noopener noreferrer" style={{ color: '#1E88E5' }} target="_blank">
                 here
               </a>
             </span>

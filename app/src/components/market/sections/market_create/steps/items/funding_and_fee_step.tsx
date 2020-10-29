@@ -257,7 +257,7 @@ const FundingAndFeeStep: React.FC<Props> = (props: Props) => {
     setIsNegativeDepositAmount(formatBigNumber(funding, collateral.decimals).includes('-'))
   }, [funding, collateral.decimals])
 
-  const resolutionDate = resolution && formatDate(resolution, false)
+  const resolutionDate = resolution && formatDate(resolution)
 
   const [customFee, setCustomFee] = useState(false)
   const [exceedsMaxFee, setExceedsMaxFee] = useState<boolean>(false)
@@ -462,10 +462,10 @@ const FundingAndFeeStep: React.FC<Props> = (props: Props) => {
           />
         )}
         <RecommendedServices
-          isScheduled={false}
           gelatoData={values.gelatoData}
           handleGelatoDataChange={handleGelatoDataChange}
           handleGelatoDataInputsChange={handleGelatoDataInputsChange}
+          isScheduled={false}
           noMarginBottom={false}
           resolution={values.resolution !== null ? values.resolution : new Date()}
         />
