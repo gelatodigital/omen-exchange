@@ -38,7 +38,7 @@ const MarketWizardCreatorContainer: FC = () => {
           return
         }
 
-        // @dev Change Modal to Gelato Conditioned
+        // @dev Change Modal to Gelato Condition
         setMarketCreationStatus(MarketCreationStatus.creatingAMarket())
 
         if (!cpk.cpk.isSafeApp()) {

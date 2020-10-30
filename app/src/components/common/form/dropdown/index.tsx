@@ -390,9 +390,6 @@ export const Dropdown: React.FC<Props> = props => {
 
   const activeItem = getItem(currentItemIndex)
 
-  console.log(activeItem)
-  console.log(currentItemIndex)
-
   return (
     <>
       <Wrapper

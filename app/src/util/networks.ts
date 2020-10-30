@@ -331,10 +331,6 @@ interface KnownGelatoConditionData {
   inputs: Date | null
 }
 
-const windowObj: any = window
-const realitioBaseUrl =
-  windowObj.ethereum && windowObj.ethereum.isMetaMask ? 'https://reality.eth' : 'https://reality.eth.link'
-
 export const knownArbitrators: { [name in KnownArbitrator]: KnownArbitratorData } = {
   kleros: {
     name: 'Kleros',

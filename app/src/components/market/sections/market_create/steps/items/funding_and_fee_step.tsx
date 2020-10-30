@@ -257,7 +257,7 @@ const FundingAndFeeStep: React.FC<Props> = (props: Props) => {
     setIsNegativeDepositAmount(formatBigNumber(funding, collateral.decimals).includes('-'))
   }, [funding, collateral.decimals])
 
-  const resolutionDate = resolution && formatDate(resolution)
+  const resolutionDate = resolution && formatDate(resolution, false)
 
   const [customFee, setCustomFee] = useState(false)
   const [exceedsMaxFee, setExceedsMaxFee] = useState<boolean>(false)
