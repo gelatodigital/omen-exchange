@@ -36,7 +36,7 @@ import { CurrenciesWrapper, GenericError } from '../../common/common_styled'
 import { CurrencySelector } from '../../common/currency_selector'
 import { GridTransactionDetails } from '../../common/grid_transaction_details'
 import { OutcomeTable } from '../../common/outcome_table'
-import { RecommendedServices } from '../../common/recommended_services'
+import { GelatoScheduler } from '../../common/recommended_services'
 import { SetAllowance } from '../../common/set_allowance'
 import { TokenBalance } from '../../common/token_balance'
 import { TransactionDetailsCard } from '../../common/transaction_details_card'
@@ -458,7 +458,7 @@ const MarketPoolLiquidityWrapper: React.FC<Props> = (props: Props) => {
             )} ${collateral.symbol}`}
           />
           {/*
-          <RecommendedServices
+          <GelatoScheduler
           resolution={values.resolution !== null ? values.resolution : new Date()}
           gelatoCondition={gelatoCondition}
           handleGelatoConditionChange={handleGelatoConditionChange}
@@ -654,7 +654,7 @@ const MarketPoolLiquidityWrapper: React.FC<Props> = (props: Props) => {
           hyperlinkDescription={''}
         />
       )}
-      <RecommendedServices
+      <GelatoScheduler
         collateralToWithdraw={`${formatBigNumber(maxCollateralReturnAmount(fundingBalance), collateral.decimals)} ${
           collateral.symbol
         }`}

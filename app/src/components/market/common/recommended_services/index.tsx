@@ -161,7 +161,7 @@ export type RecommendedServicesProps = DOMAttributes<HTMLDivElement> & {
   handleGelatoDataInputsChange: (newDate: Date | null) => any
 }
 
-export const RecommendedServices: React.FC<RecommendedServicesProps> = (props: RecommendedServicesProps) => {
+export const GelatoScheduler: React.FC<RecommendedServicesProps> = (props: RecommendedServicesProps) => {
   const {
     collateralToWithdraw,
     etherscanLink,

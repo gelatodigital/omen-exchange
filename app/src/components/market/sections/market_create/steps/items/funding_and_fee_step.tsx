@@ -48,7 +48,7 @@ import { CreateCard } from '../../../../common/create_card'
 import { CurrencySelector } from '../../../../common/currency_selector'
 import { DisplayArbitrator } from '../../../../common/display_arbitrator'
 import { GridTransactionDetails } from '../../../../common/grid_transaction_details'
-import { RecommendedServices } from '../../../../common/recommended_services'
+import { GelatoScheduler } from '../../../../common/recommended_services'
 import { SetAllowance } from '../../../../common/set_allowance'
 import { TradingFeeSelector } from '../../../../common/trading_fee_selector'
 import { TransactionDetailsCard } from '../../../../common/transaction_details_card'
@@ -461,7 +461,7 @@ const FundingAndFeeStep: React.FC<Props> = (props: Props) => {
             hyperlinkDescription={''}
           />
         )}
-        <RecommendedServices
+        <GelatoScheduler
           gelatoData={values.gelatoData}
           handleGelatoDataChange={handleGelatoDataChange}
           handleGelatoDataInputsChange={handleGelatoDataInputsChange}
