@@ -442,59 +442,28 @@ const MarketPoolLiquidityWrapper: React.FC<Props> = (props: Props) => {
   return (
     <>
       <UserData>
-        <UserDataTitleValue
-          title="Your Liquidity"
-          value={`${formatNumber(formatBigNumber(totalUserLiquidity, collateral.decimals))} ${collateral.symbol}`}
-        />
-        <UserDataTitleValue
-          title="Total Pool Tokens"
-          value={`${formatNumber(formatBigNumber(totalPoolShares, collateral.decimals))}`}
-        />
-        <UserDataTitleValue
-          state={userEarnings.gt(0) ? ValueStates.success : undefined}
-          title="Your Earnings"
-          value={`${userEarnings.gt(0) ? '+' : ''}${formatNumber(formatBigNumber(userEarnings, collateral.decimals))} ${
-            collateral.symbol
-          }`}
-        />
-        <UserDataTitleValue
-          state={totalEarnings.gt(0) ? ValueStates.success : undefined}
-          title="Total Earnings"
-          value={`${totalEarnings.gt(0) ? '+' : ''}${formatNumber(
-            formatBigNumber(totalEarnings, collateral.decimals),
-          )} ${collateral.symbol}`}
-        />
-        {/* <RecommendedServices
+          <UserDataTitleValue
+            title="Your Liquidity"
+            value={`${formatNumber(formatBigNumber(totalUserLiquidity, collateral.decimals))} ${collateral.symbol}`}
+          />
+          <UserDataTitleValue
+            title="Total Pool Tokens"
+            value={`${formatBigNumber(totalPoolShares, collateral.decimals)} ${collateral.symbol}`}
+          />
+          <UserDataTitleValue
+            state={userEarnings.gt(0) ? ValueStates.success : undefined}
+            title="Your Earnings"
+            value={`${userEarnings.gt(0) ? '+' : ''}${formatNumber(
+              formatBigNumber(userEarnings, collateral.decimals),
+            )} ${collateral.symbol}`}
+          />
+          {/*
+          <RecommendedServices
           resolution={values.resolution !== null ? values.resolution : new Date()}
           gelatoCondition={gelatoCondition}
           handleGelatoConditionChange={handleGelatoConditionChange}
-          handleGelatoConditionInputsChange={handleGelatoConditionInputsChange}
-
-        <RecommendedServices
-          collateralToWithdraw={`${formatBigNumber(maxCollateralReturnAmount(fundingBalance), collateral.decimals)} ${
-            collateral.symbol
-          }`}
-          etherscanLink={etherscanLink ? etherscanLink : undefined}
-          gelatoData={gelatoData}
-          handleGelatoDataChange={setGelatoData}
-          handleGelatoDataInputsChange={(newDate: Date | null) => {
-            const gelatoDataCopy = { ...gelatoData, inputs: newDate }
-            setGelatoData(gelatoDataCopy)
-          }}
-          isScheduled={submittedTaskReceiptWrapper && submittedTaskReceiptWrapper.status !== 'canceled' ? true : false}
-          noMarginBottom={false}
-          resolution={resolutionDate !== null ? marketMakerData.question.resolution : new Date()}
-          taskStatus={submittedTaskReceiptWrapper ? submittedTaskReceiptWrapper.status : undefined}
-        />
-        */}
-        {activeTab === Tabs.deposit && showSetAllowance && (
-          <>
-          <SetAllowance
-            collateral={collateral}
-            finished={allowanceFinished && RemoteData.is.success(allowance)}
-            loading={RemoteData.is.asking(allowance)}
-            onUnlock={unlockCollateral}
-          />
+          handleGelatoConditionInputsChange={handleGelatoConditionInputsChange} 
+          */}
 
           <UserDataTitleValue
             state={totalEarnings.gt(0) ? ValueStates.success : undefined}
@@ -502,7 +471,7 @@ const MarketPoolLiquidityWrapper: React.FC<Props> = (props: Props) => {
             value={`${totalEarnings.gt(0) ? '+' : ''}${formatBigNumber(totalEarnings, collateral.decimals)} ${
               collateral.symbol
             }`}
-          /></>)}
+          />)}
         </UserData>
       <OutcomeTable
         balances={balances}
@@ -671,11 +640,43 @@ const MarketPoolLiquidityWrapper: React.FC<Props> = (props: Props) => {
       )}
       {isNegativeAmountToRemove && (
         <WarningMessage
+<<<<<<< HEAD
           additionalDescription=""
           danger
           description="Your withdraw amount should not be negative."
           href=""
           hyperlinkDescription=""
+=======
+          additionalDescription={''}
+          danger={true}
+          description={`Your withdraw amount should not be negative.`}
+          href={''}
+          hyperlinkDescription={''}
+        />
+      )}
+      <RecommendedServices
+        collateralToWithdraw={`${formatBigNumber(maxCollateralReturnAmount(fundingBalance), collateral.decimals)} ${
+          collateral.symbol
+        }`}
+        etherscanLink={etherscanLink ? etherscanLink : undefined}
+        gelatoData={gelatoData}
+        handleGelatoDataChange={setGelatoData}
+        handleGelatoDataInputsChange={(newDate: Date | null) => {
+          const gelatoDataCopy = { ...gelatoData, inputs: newDate }
+          setGelatoData(gelatoDataCopy)
+        }}
+        isScheduled={submittedTaskReceiptWrapper && submittedTaskReceiptWrapper.status !== 'canceled' ? true : false}
+        noMarginBottom={false}
+        resolution={resolutionDate !== null ? marketMakerData.question.resolution : new Date()}
+        taskStatus={submittedTaskReceiptWrapper ? submittedTaskReceiptWrapper.status : undefined}
+      />
+      {activeTab === Tabs.deposit && showSetAllowance && (
+        <SetAllowance
+          collateral={collateral}
+          finished={allowanceFinished && RemoteData.is.success(allowance)}
+          loading={RemoteData.is.asking(allowance)}
+          onUnlock={unlockCollateral}
+>>>>>>> re-added recommended servies component to MarketPoolLiquidityWrapper
         />
       )}
       <BottomButtonWrapper>

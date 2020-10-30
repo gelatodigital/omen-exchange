@@ -33,10 +33,10 @@ const Title = styled.h2`
 const DescriptionWrapper = styled.div<{ isRow: boolean }>`
   align-items: center;
   border-radius: 4px;
-  border: 1px solid ${props => props.theme.borders.borderColorLighter};
+  border: 1px solid ${props => props.theme.borders.borderDisabled};
+  padding: 21px 25px;
   flex-direction: ${props => (props.isRow ? 'row' : 'column')};
   display: flex;
-  padding: 21px 25px;
   align-items: stretch;
 `
 
