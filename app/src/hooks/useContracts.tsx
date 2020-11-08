@@ -70,6 +70,7 @@ export const useContracts = (context: ConnectedWeb3Context) => {
   const gelatoAddressStorageAddress = getContractAddress(networkId, 'gelatoAddressStorage')
   const gelatoAddressStorage = useMemo(() => new GelatoService(provider, account, gelatoAddressStorageAddress), [
     provider,
+    account,
     gelatoAddressStorageAddress,
   ])
 
