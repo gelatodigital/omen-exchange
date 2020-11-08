@@ -473,7 +473,6 @@ class CPKService {
 
       // If Gelato task is still active
       if (taskReceiptWrapper && taskReceiptWrapper.status === 'awaitingExec') {
-        console.log('Will cancel the transactions')
         const gelatoCoreAddress = await gelatoAddressStorage.getGelatoCoreAddress()
         const cancelTaskData = gelatoAddressStorage.encodeCancelTask(taskReceiptWrapper.taskReceipt)
         transactions.push({
@@ -548,7 +547,6 @@ class CPKService {
     marketMakerAddress: string,
     account: string,
   ) => {
-    console.log('ADDING GELATO TO THE MIX')
     const transactions = []
 
     // Step 6: Enable Gelato Core as a module if not already done

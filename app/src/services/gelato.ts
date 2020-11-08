@@ -31,10 +31,10 @@ interface SubmitTimeBasedWithdrawalData {
   receiver: string
 }
 
-interface KeyValue {
-  key: string
-  value: string
-}
+// interface KeyValue {
+//   key: string
+//   value: string
+// }
 
 class GelatoService {
   provider: any

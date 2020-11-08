@@ -27,7 +27,7 @@ import {
   formatNumber,
 } from '../../../../util/tools'
 import { GelatoData, MarketMakerData, OutcomeTableValue, Status, Ternary } from '../../../../util/types'
-import { Button, ButtonContainer, ButtonTab } from '../../../button'
+import { ButtonContainer, ButtonTab } from '../../../button'
 import { ButtonType } from '../../../button/button_styling_types'
 import { BigNumberInput, TextfieldCustomPlaceholder, TitleValue } from '../../../common'
 import { BigNumberInputReturn } from '../../../common/form/big_number_input'

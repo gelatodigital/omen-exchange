@@ -27,7 +27,6 @@ interface Props {
 
 const MarketValidation: React.FC<Props> = (props: Props) => {
   const context = useConnectedWeb3Context()
-  const { account } = context
 
   const { marketMakerAddress } = props
 
