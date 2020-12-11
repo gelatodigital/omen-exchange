@@ -13,8 +13,8 @@ import {
 import {
   useCollateralBalance,
   useConnectedCPKContext,
-  useConnectedWeb3Context,
   useConnectedCPKContextAllowance,
+  useConnectedWeb3Context,
   useTokens,
 } from '../../../../../../hooks'
 import { useGraphMarketsFromQuestion } from '../../../../../../hooks/useGraphMarketsFromQuestion'

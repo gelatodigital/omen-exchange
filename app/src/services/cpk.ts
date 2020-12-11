@@ -9,7 +9,7 @@ import moment from 'moment'
 import { getLogger } from '../util/logger'
 import { getCPKAddresses, getContractAddress } from '../util/networks'
 import { calcDistributionHint, waitABit } from '../util/tools'
-import { MarketData, Question, Token, GelatoData, TaskReceiptWrapper } from '../util/types'
+import { GelatoData, MarketData, Question, TaskReceiptWrapper, Token } from '../util/types'
 
 import { ConditionalTokenService } from './conditional_token'
 import { ERC20Service } from './erc20'
@@ -359,9 +359,9 @@ class CPKService {
       }
 
       const txObject = await this.cpk.execTransactions(transactions)
-      const txHash = await this.provider.getTransactionHash(txObject)
+      const txHash = await this.getTransactionHash(txObject)
       logger.log(`Transaction hash: ${txHash}`)
-      const transaction = await this.provider.waitForTransaction(txHash);
+      const transaction = await this.provider.waitForTransaction(txHash)
       return {
         transaction,
         marketMakerAddress: predictedMarketMakerAddress,
@@ -499,8 +499,6 @@ class CPKService {
         transactions.push(...gelatoTransactions)
       }
 
-      const txObject = await this.cpk.execTransactions(transactions)
-
       const txObject = await this.cpk.execTransactions(transactions, txOptions)
       const txHash = await this.getTransactionHash(txObject)
       logger.log(`Transaction hash: ${txHash}`)
@@ -555,8 +553,6 @@ class CPKService {
           data: cancelTaskData,
         })
       }
-
-      const txObject = await this.cpk.execTransactions(transactions)
 
       // If we are signed in as a safe we don't need to transfer
       if (!this.cpk.isSafeApp()) {

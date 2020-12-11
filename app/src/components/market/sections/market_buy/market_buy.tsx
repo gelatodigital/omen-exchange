@@ -11,9 +11,9 @@ import {
   useAsyncDerivedValue,
   useCollateralBalance,
   useConnectedCPKContext,
+  useConnectedCPKContextAllowance,
   useConnectedWeb3Context,
   useContracts,
-  useConnectedCPKContextAllowance,
 } from '../../../../hooks'
 import { MarketMakerService } from '../../../../services'
 import { getLogger } from '../../../../util/logger'

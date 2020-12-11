@@ -15,11 +15,13 @@ interface Props {
 }
 
 const MarketPoolLiquidityContainer: React.FC<Props> = (props: Props) => {
-  const { marketMakerData, /*gelatoTask*/ switchMarketTab } = props
+  const { fetchGraphMarketMakerData, marketMakerData, /*gelatoTask*/ switchMarketTab } = props
 
   return (
     <MarketPoolLiquidity
-      /*gelatoTask={gelatoTask}*/ marketMakerData={marketMakerData}
+      /*gelatoTask={gelatoTask}*/
+      fetchGraphMarketMakerData={fetchGraphMarketMakerData}
+      marketMakerData={marketMakerData}
       switchMarketTab={switchMarketTab}
     />
   )
