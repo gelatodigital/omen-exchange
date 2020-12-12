@@ -36,7 +36,7 @@ import { CurrenciesWrapper, GenericError } from '../../common/common_styled'
 import { CurrencySelector } from '../../common/currency_selector'
 import { GridTransactionDetails } from '../../common/grid_transaction_details'
 import { OutcomeTable } from '../../common/outcome_table'
-// import { GelatoScheduler } from '../../common/recommended_services'
+import { GelatoScheduler } from '../../common/recommended_services'
 import { SetAllowance } from '../../common/set_allowance'
 import { TokenBalance } from '../../common/token_balance'
 import { TransactionDetailsCard } from '../../common/transaction_details_card'
@@ -601,6 +601,22 @@ const MarketPoolLiquidityWrapper: React.FC<Props> = (props: Props) => {
           )}
         </div>
       </GridTransactionDetails>
+      <GelatoScheduler
+        collateralToWithdraw={`${formatBigNumber(maxCollateralReturnAmount(fundingBalance), collateral.decimals)} ${
+          collateral.symbol
+        }`}
+        etherscanLink={etherscanLink ? etherscanLink : undefined}
+        gelatoData={gelatoData}
+        handleGelatoDataChange={setGelatoData}
+        handleGelatoDataInputsChange={(newDate: Date | null) => {
+          const gelatoDataCopy = { ...gelatoData, inputs: newDate }
+          setGelatoData(gelatoDataCopy)
+        }}
+        isScheduled={submittedTaskReceiptWrapper && submittedTaskReceiptWrapper.status !== 'canceled' ? true : false}
+        noMarginBottom={false}
+        resolution={resolutionDate !== null ? marketMakerData.question.resolution : new Date()}
+        taskStatus={submittedTaskReceiptWrapper ? submittedTaskReceiptWrapper.status : undefined}
+      />
       {activeTab === Tabs.deposit && showSetAllowance && (
         <SetAllowanceStyled
           collateral={collateral}
