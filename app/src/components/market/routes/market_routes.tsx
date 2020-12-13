@@ -2,7 +2,7 @@ import { useInterval } from '@react-corekit/use-interval'
 import React from 'react'
 import { Redirect, RouteComponentProps } from 'react-router'
 
-import { FETCH_DETAILS_INTERVAL, MAX_MARKET_FEE } from '../../../common/constants'
+import { FETCH_DETAILS_INTERVAL } from '../../../common/constants'
 import { useCheckContractExists, useMarketMakerData } from '../../../hooks'
 import { useConnectedWeb3Context } from '../../../hooks/connectedWeb3'
 import { MarketDetailsPage } from '../../../pages'
