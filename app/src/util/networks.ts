@@ -1,5 +1,6 @@
 import {
   DEFAULT_ARBITRATOR,
+  DEFAULT_GELATO_CONDITION,
   DEFAULT_TOKEN,
   EARLIEST_MAINNET_BLOCK_TO_CHECK,
   EARLIEST_RINKEBY_BLOCK_TO_CHECK,
@@ -16,7 +17,7 @@ import {
 import { entries, isNotNull } from '../util/type-utils'
 
 import { getImageUrl } from './token'
-import { Arbitrator, Token } from './types'
+import { Arbitrator, GelatoData, Token } from './types'
 
 export type NetworkId = 1 | 4
 
@@ -51,6 +52,7 @@ interface Network {
     klerosTokenView: string
     klerosTCR: string
     dxTCR: string
+    gelatoAddressStorage: string
     omenVerifiedMarkets: string
   }
   cpk?: CPKAddresses
@@ -87,6 +89,7 @@ const networks: { [K in NetworkId]: Network } = {
       klerosTokenView: '0xf9b9b5440340123b21bff1ddafe1ad6feb9d6e7f',
       klerosTCR: '0xebcf3bca271b26ae4b162ba560e243055af0e679',
       dxTCR: '0x93DB90445B76329e9ed96ECd74e76D8fbf2590d8',
+      gelatoAddressStorage: '0x0cB371fcD122634104803cc1A8B4173A7FF61D93',
       omenVerifiedMarkets: '0xb72103eE8819F2480c25d306eEAb7c3382fBA612',
     },
   },
@@ -109,6 +112,7 @@ const networks: { [K in NetworkId]: Network } = {
       klerosTokenView: '0x0000000000000000000000000000000000000000',
       klerosTCR: '0x0000000000000000000000000000000000000000',
       dxTCR: '0x03165DF66d9448E45c2f5137486af3E7e752a352',
+      gelatoAddressStorage: '0xaFc624CEb51BC7198C66E6e582d0cEe924Fa73Dd',
       omenVerifiedMarkets: '0x3b29096b7ab49428923d902cEC3dFEaa49993234',
     },
   },
@@ -321,6 +325,12 @@ interface KnownArbitratorData {
   isSelectionEnabled: boolean
 }
 
+interface KnownGelatoConditionData {
+  id: string
+  shouldSubmit: boolean
+  inputs: Date | null
+}
+
 export const knownArbitrators: { [name in KnownArbitrator]: KnownArbitratorData } = {
   kleros: {
     name: 'Kleros',
@@ -336,6 +346,14 @@ export const knownArbitrators: { [name in KnownArbitrator]: KnownArbitratorData 
     url: '',
     addresses: {},
     isSelectionEnabled: true,
+  },
+}
+
+export const knownGelatoConditions: { [name in KnownGelatoCondition]: KnownGelatoConditionData } = {
+  time: {
+    id: 'time',
+    shouldSubmit: false,
+    inputs: null,
   },
 }
 
@@ -356,12 +374,30 @@ export const getArbitrator = (networkId: number, arbitratorId: KnownArbitrator):
   }
 }
 
+export const getGelatoCondition = (conditionId: KnownGelatoCondition): GelatoData => {
+  const condition = knownGelatoConditions[conditionId]
+
+  return {
+    id: conditionId,
+    shouldSubmit: condition.shouldSubmit,
+    inputs: null,
+  }
+}
+
 export const getDefaultArbitrator = (networkId: number): Arbitrator => {
   if (!validNetworkId(networkId)) {
     throw new Error(`Unsupported network id: '${networkId}'`)
   }
 
   return getArbitrator(networkId, DEFAULT_ARBITRATOR)
+}
+
+export const getDefaultGelatoData = (networkId: number): GelatoData => {
+  if (!validNetworkId(networkId)) {
+    throw new Error(`Unsupported network id: '${networkId}'`)
+  }
+
+  return getGelatoCondition(DEFAULT_GELATO_CONDITION)
 }
 
 export const getArbitratorFromAddress = (networkId: number, address: string): Arbitrator => {
@@ -447,6 +483,25 @@ export const getArbitratorsByNetwork = (networkId: number): Arbitrator[] => {
         }
       }
       return null
+    })
+    .filter(isNotNull)
+}
+
+export const getGelatoConditionByNetwork = (networkId: number): GelatoData[] => {
+  if (!validNetworkId(networkId)) {
+    throw new Error(`Unsupported network id: '${networkId}'`)
+  }
+
+  return Object.values(knownGelatoConditions)
+    .map(condition => {
+      const { inputs, shouldSubmit } = condition
+      const id = condition.id as KnownGelatoCondition
+
+      return {
+        id,
+        inputs,
+        shouldSubmit,
+      }
     })
     .filter(isNotNull)
 }

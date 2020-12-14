@@ -67,6 +67,8 @@ export const Logo = OmenLogo
 
 export const DEFAULT_ARBITRATOR: KnownArbitrator = 'kleros'
 
+export const DEFAULT_GELATO_CONDITION: KnownGelatoCondition = 'time'
+
 export const DEFAULT_TOKEN = 'dai'
 
 export const DOCUMENT_TITLE = 'Omen'

@@ -4,6 +4,7 @@ import { IPFS_GATEWAY } from '../common/constants'
 import {
   ConditionalTokenService,
   DxTCRService,
+  GelatoService,
   KlerosService,
   MarketMakerFactoryService,
   MarketMakerService,
@@ -66,6 +67,13 @@ export const useContracts = (context: ConnectedWeb3Context) => {
   const dxTCRAddress = getContractAddress(networkId, 'dxTCR')
   const dxTCR = useMemo(() => new DxTCRService(dxTCRAddress, provider), [provider, dxTCRAddress])
 
+  const gelatoAddressStorageAddress = getContractAddress(networkId, 'gelatoAddressStorage')
+  const gelatoAddressStorage = useMemo(() => new GelatoService(provider, account, gelatoAddressStorageAddress), [
+    provider,
+    account,
+    gelatoAddressStorageAddress,
+  ])
+
   return useMemo(
     () => ({
       conditionalTokens,
@@ -75,8 +83,9 @@ export const useContracts = (context: ConnectedWeb3Context) => {
       buildMarketMaker,
       kleros,
       dxTCR,
+      gelatoAddressStorage,
     }),
-    [conditionalTokens, marketMakerFactory, realitio, oracle, kleros, buildMarketMaker, dxTCR],
+    [conditionalTokens, marketMakerFactory, realitio, oracle, kleros, buildMarketMaker, dxTCR, gelatoAddressStorage],
   )
 }
 

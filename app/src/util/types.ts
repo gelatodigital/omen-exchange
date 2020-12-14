@@ -179,6 +179,12 @@ export interface Arbitrator {
   url: string
 }
 
+export interface GelatoData {
+  id: KnownGelatoCondition
+  shouldSubmit: boolean
+  inputs: Date | null
+}
+
 export enum Wallet {
   MetaMask = 'MetaMask',
   WalletConnect = 'WalletConnect',
@@ -192,6 +198,7 @@ export interface MarketData {
   question: string
   category: string
   resolution: Date | null
+  gelatoData: GelatoData
   arbitrator: Arbitrator
   spread: number
   funding: BigNumber
@@ -399,3 +406,73 @@ export enum MarketState {
 }
 
 export const INVALID_ANSWER_ID = '0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff'
+
+// Gelato Types
+export interface GelatoProvider {
+  addr: string
+  module: string
+}
+
+export interface GelatoCondition {
+  inst: string
+  data: string
+}
+
+export enum Operation {
+  Call,
+  Delegatecall,
+}
+
+export enum DataFlow {
+  None,
+  In,
+  Out,
+  InAndOut,
+}
+
+export interface GelatoAction {
+  addr: string
+  data: string
+  value: BigNumber
+  operation: Operation
+  termsOkCheck: boolean
+  dataFlow: DataFlow
+}
+
+export interface Task {
+  conditions: GelatoCondition[]
+  actions: GelatoAction[]
+  selfProviderGasLimit: BigNumber
+  selfProviderGasPriceCeil: BigNumber
+}
+
+export interface TaskReceipt {
+  id: number
+  userProxy: string
+  provider: GelatoProvider
+  index: number
+  tasks: Task[]
+  expiryDate: number
+  cycleId: number
+  submissionsLeft: number
+}
+
+export interface TaskReceiptWrapper {
+  user: string
+  taskReceipt: TaskReceipt
+  submissionHash: string
+  status: string
+  submissionDate: number
+  selectedExecutor: string
+  executionDate: number
+  executionHash: string
+  selfProvided: boolean
+}
+
+export enum TaskReceiptStatus {
+  awaitingExec,
+  execSuccess,
+  execReverted,
+  canceled,
+  expired,
+}
