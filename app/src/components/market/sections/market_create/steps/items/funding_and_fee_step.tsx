@@ -193,6 +193,7 @@ const FundingAndFeeStep: React.FC<Props> = (props: Props) => {
   const balance = useSelector((state: BalanceState): Maybe<BigNumber> => state.balance && new BigNumber(state.balance))
   const dispatch = useDispatch()
   const { account, library: provider } = context
+
   const signer = useMemo(() => provider.getSigner(), [provider])
 
   const {
@@ -511,7 +512,13 @@ const FundingAndFeeStep: React.FC<Props> = (props: Props) => {
         </StyledButtonContainerFullWidth>
       </CreateCardBottom>
       {!MarketCreationStatus.is.ready(marketCreationStatus) && !MarketCreationStatus.is.error(marketCreationStatus) ? (
-        <FullLoading message={`${marketCreationStatus._type}...`} />
+        <FullLoading
+          message={
+            values.gelatoData.shouldSubmit
+              ? `${marketCreationStatus._type} and scheduling auto-withdraw with Gelato...`
+              : `${marketCreationStatus._type}...`
+          }
+        />
       ) : null}
     </>
   )

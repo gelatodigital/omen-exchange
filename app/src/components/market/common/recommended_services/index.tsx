@@ -155,6 +155,7 @@ export type RecommendedServicesProps = DOMAttributes<HTMLDivElement> & {
   isScheduled: boolean
   execSuccess?: boolean
   collateralToWithdraw?: string
+  collateralSymbol?: string
   taskStatus?: string
   etherscanLink?: string
   handleGelatoDataChange: (gelatoData: GelatoData) => any
@@ -163,6 +164,7 @@ export type RecommendedServicesProps = DOMAttributes<HTMLDivElement> & {
 
 export const GelatoScheduler: React.FC<RecommendedServicesProps> = (props: RecommendedServicesProps) => {
   const {
+    collateralSymbol,
     collateralToWithdraw,
     etherscanLink,
     gelatoData,
@@ -316,7 +318,7 @@ export const GelatoScheduler: React.FC<RecommendedServicesProps> = (props: Recom
           <div style={{ display: 'flex', justifyContent: 'space-between', flexDirection: 'row', width: '100%' }}>
             <TitleAndDescription alignItemsEnd={false}>
               <Description textAlignRight={false}>{`Auto-Withdraw ${
-                taskStatus === 'execSuccess' ? '' : collateralToWithdraw
+                taskStatus === 'execSuccess' ? '' : `${collateralToWithdraw} ${collateralSymbol}`
               }`}</Description>
               <SubDescription textAlignRight={false}>{`Powered by Gelato Network`}</SubDescription>
             </TitleAndDescription>
@@ -332,9 +334,9 @@ export const GelatoScheduler: React.FC<RecommendedServicesProps> = (props: Recom
       {taskStatus === 'awaitingExec' && (
         <DescriptionWrapper isRow={false}>
           <Description textAlignRight={false}>
-            {`Gelato will automatically withdraw your liquidity of ${collateralToWithdraw} on ${formatDate(
+            {`Gelato will automatically withdraw your liquidity of ${collateralToWithdraw} ${collateralSymbol} on ${formatDate(
               gelatoData.inputs,
-            )}. You cancel the auto-withdraw by manually withdrawing your liquidity.`}
+            )} (with a network fee deducted from withdrawn ${collateralSymbol}). Cancel the auto-withdraw by manually withdrawing your liquidity.`}
           </Description>
         </DescriptionWrapper>
       )}

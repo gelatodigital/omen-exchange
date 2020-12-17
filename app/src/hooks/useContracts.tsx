@@ -67,12 +67,7 @@ export const useContracts = (context: ConnectedWeb3Context) => {
   const dxTCRAddress = getContractAddress(networkId, 'dxTCR')
   const dxTCR = useMemo(() => new DxTCRService(dxTCRAddress, provider), [provider, dxTCRAddress])
 
-  const gelatoAddressStorageAddress = getContractAddress(networkId, 'gelatoAddressStorage')
-  const gelatoAddressStorage = useMemo(() => new GelatoService(provider, account, gelatoAddressStorageAddress), [
-    provider,
-    account,
-    gelatoAddressStorageAddress,
-  ])
+  const gelato = useMemo(() => new GelatoService(provider, account, networkId), [provider, account, networkId])
 
   return useMemo(
     () => ({
@@ -83,9 +78,9 @@ export const useContracts = (context: ConnectedWeb3Context) => {
       buildMarketMaker,
       kleros,
       dxTCR,
-      gelatoAddressStorage,
+      gelato,
     }),
-    [conditionalTokens, marketMakerFactory, realitio, oracle, kleros, buildMarketMaker, dxTCR, gelatoAddressStorage],
+    [conditionalTokens, marketMakerFactory, realitio, oracle, kleros, buildMarketMaker, dxTCR, gelato],
   )
 }
 

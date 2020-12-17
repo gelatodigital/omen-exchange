@@ -40,14 +40,14 @@ interface CPKCreateMarketParams {
   conditionalTokens: ConditionalTokenService
   realitio: RealitioService
   marketMakerFactory: MarketMakerFactoryService
-  gelatoAddressStorage: GelatoService
+  gelato: GelatoService
 }
 
 interface CPKAddFundingParams {
   amount: BigNumber
   collateral: Token
   marketMaker: MarketMakerService
-  gelatoAddressStorage: GelatoService
+  gelato: GelatoService
   gelatoData: GelatoData
   conditionalTokens: ConditionalTokenService
   conditionId: string
@@ -64,7 +64,7 @@ interface CPKRemoveFundingParams {
   outcomesCount: number
   sharesToBurn: BigNumber
   taskReceiptWrapper: TaskReceiptWrapper | null
-  gelatoAddressStorage: GelatoService
+  gelato: GelatoService
 }
 
 interface CPKRedeemParams {
@@ -216,7 +216,7 @@ class CPKService {
 
   createMarket = async ({
     conditionalTokens,
-    gelatoAddressStorage,
+    gelato,
     marketData,
     marketMakerFactory,
     realitio,
@@ -347,7 +347,7 @@ class CPKService {
       if (gelatoData.shouldSubmit) {
         const gelatoTransactions = await this.addGelatoSubmitTransaction(
           gelatoData,
-          gelatoAddressStorage,
+          gelato,
           outcomes.length,
           conditionalTokens,
           conditionId,
@@ -434,7 +434,7 @@ class CPKService {
     collateral,
     conditionId,
     conditionalTokens,
-    gelatoAddressStorage,
+    gelato,
     gelatoData,
     marketMaker,
     submittedTaskReceiptWrapper,
@@ -494,7 +494,7 @@ class CPKService {
       ) {
         const gelatoTransactions = await this.addGelatoSubmitTransaction(
           gelatoData,
-          gelatoAddressStorage,
+          gelato,
           outcomeSlotCountInt,
           conditionalTokens,
           conditionId,
@@ -521,7 +521,7 @@ class CPKService {
     conditionId,
     conditionalTokens,
     earnings,
-    gelatoAddressStorage,
+    gelato,
     marketMaker,
     outcomesCount,
     sharesToBurn,
@@ -550,10 +550,9 @@ class CPKService {
 
       // If Gelato task is still active
       if (taskReceiptWrapper && taskReceiptWrapper.status === 'awaitingExec') {
-        const gelatoCoreAddress = await gelatoAddressStorage.getGelatoCoreAddress()
-        const cancelTaskData = gelatoAddressStorage.encodeCancelTask(taskReceiptWrapper.taskReceipt)
+        const cancelTaskData = gelato.encodeCancelTask(taskReceiptWrapper.taskReceipt)
         transactions.push({
-          to: gelatoCoreAddress,
+          to: gelato.addresses.gelatoCore,
           data: cancelTaskData,
         })
       }
@@ -656,7 +655,7 @@ class CPKService {
 
   addGelatoSubmitTransaction = async (
     gelatoData: GelatoData,
-    gelatoAddressStorage: GelatoService,
+    gelato: GelatoService,
     outcomeCount: number,
     conditionalTokens: ConditionalTokenService,
     conditionId: string,
@@ -667,9 +666,13 @@ class CPKService {
     const transactions = []
 
     // Step 6: Enable Gelato Core as a module if not already done
-    const isGelatoWhitelistedModule = await gelatoAddressStorage.isGelatoWhitelistedModule(this.cpk.address)
-    if (!isGelatoWhitelistedModule) {
-      const enableModuleData = await gelatoAddressStorage.encodeWhitelistGelatoAsModule()
+    try {
+      const isGelatoWhitelistedModule = await gelato.isGelatoWhitelistedModule(this.cpk.address)
+      if (!isGelatoWhitelistedModule) {
+        throw Error('')
+      }
+    } catch {
+      const enableModuleData = await gelato.encodeWhitelistGelatoAsModule()
       transactions.push({
         to: this.cpk.address,
         data: enableModuleData,
@@ -677,7 +680,7 @@ class CPKService {
     }
 
     // Step 7: If automatic withdraw was selected, submit automatic Withdrawal Task to Gelato
-    const submitTaskData = await gelatoAddressStorage.encodeSubmitTimeBasedWithdrawalTask({
+    const submitTaskData = await gelato.encodeSubmitTimeBasedWithdrawalTask({
       gelatoData,
       conditionalTokensAddress: conditionalTokens.address,
       fpmmAddress: marketMakerAddress,
@@ -687,9 +690,8 @@ class CPKService {
       receiver: account,
     })
 
-    const gelatoCoreAddress = await gelatoAddressStorage.getGelatoCoreAddress()
     transactions.push({
-      to: gelatoCoreAddress,
+      to: gelato.addresses.gelatoCore,
       data: submitTaskData,
     })
 

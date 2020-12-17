@@ -1,11 +1,6 @@
-import { Contract, Wallet, ethers, utils } from 'ethers'
+import { Wallet, ethers, utils } from 'ethers'
 
 import { GelatoData, Operation, TaskReceipt } from '../util/types'
-
-const gelatoAddressStorageAbi = [
-  'function getAddress(string _key) external view returns (address)',
-  'function batchGetAddress(string[] _keys) public view returns (tuple(string key, address value)[] result)',
-]
 
 const gelatoCoreAbi = [
   'function submitTask(tuple(address addr, address module) _provider, tuple(tuple(address inst, bytes data)[] conditions, tuple(address addr, bytes data, uint8 operation, uint8 dataFlow, uint256 value, bool termsOkCheck)[] actions, uint256 selfProviderGasLimit, uint256 selfProviderGasPriceCeil) _task, uint256 _expiryDate)',
@@ -20,6 +15,30 @@ const gnosisSafeAbi = [
   'function enableModule(address module) public',
   'function getModules() public view returns (address[])',
 ]
+
+const gelatoContracts = {
+  abis: {
+    gelatoCore: gelatoCoreAbi,
+    actionWithdrawLiquidity: actionWithdrawLiquidutyAbi,
+    gnosisSafe: gnosisSafeAbi,
+  },
+  addresses: {
+    rinkeby: {
+      gelatoCore: '0x733aDEf4f8346FD96107d8d6605eA9ab5645d632',
+      gelatoProvider: '0x01056a4A95a88035af4fC9fD9fD4d4563dd284C3',
+      providerModuleGnosisSafe: '0x2661B579243c49988D9eDAf114Bfac5c5E249287',
+      conditionTime: '0xC92Bc7c905d52B4bC4d60719a8Bce3B643d77daF',
+      actionWithdrawLiquidity: '0x101F34DD8B3B831E1579D5Cb62221bbdA11186A2',
+    },
+    mainnet: {
+      gelatoCore: '0x025030bdaa159f281cae63873e68313a703725a5',
+      gelatoProvider: '0x5B753BF02a42bC73B5846dfd16a8F2e082b99a6a',
+      providerModuleGnosisSafe: '0x2E87AD9BBdaa9113cd5cA1920c624E2749D7086B',
+      conditionTime: '0x63129681c487d231aa9148e1e21837165f38deaf',
+      actionWithdrawLiquidity: '0x301E130DAA16B2F8FAeB21E1a328EAB0d606AC12',
+    },
+  },
+}
 
 interface SubmitTimeBasedWithdrawalData {
   gelatoData: GelatoData
@@ -38,100 +57,34 @@ interface SubmitTimeBasedWithdrawalData {
 
 class GelatoService {
   provider: any
-  contract: Contract
+  signer: any
+  addresses: any
 
-  constructor(provider: any, signerAddress: Maybe<string>, gelatoAddressStorageAddress: string) {
+  constructor(provider: any, signerAddress: Maybe<string>, networkId: number) {
     this.provider = provider
-    if (signerAddress) {
-      const signer: Wallet = provider.getSigner()
-      this.contract = new ethers.Contract(gelatoAddressStorageAddress, gelatoAddressStorageAbi, provider).connect(
-        signer,
-      )
+    this.signer = null
+    if (networkId == 1) {
+      this.addresses = gelatoContracts.addresses.mainnet
+    } else if (networkId == 4) {
+      this.addresses = gelatoContracts.addresses.rinkeby
     } else {
-      this.contract = new ethers.Contract(gelatoAddressStorageAddress, gelatoAddressStorageAbi, provider)
+      throw Error(`unknown networkId: ${networkId}`)
     }
-  }
-
-  get address(): string {
-    return this.contract.address
-  }
-
-  getAddressFromAddressStorage = (addresses: any[], name: string): string => {
-    const keyValue = addresses.find((keyValue: any) => keyValue.key === name)
-    if (keyValue) return keyValue.value
-    else throw Error('Address not Found in Gelato Address Storage')
-  }
-
-  /**
-   * @returns The Address of the Gelato Core Contract
-   */
-  getGelatoCoreAddress = async (): Promise<string> => {
-    return this.contract.getAddress('gelatoCore')
-  }
-
-  /**
-   * @returns The Address of the Gelato Core Contract
-   */
-  getGnosisSafeModuleAddress = async (): Promise<string> => {
-    return this.contract.getAddress('providerModuleGnosisSafe')
-  }
-
-  /**
-   * @returns The Address of the Gelato Core Contract
-   */
-  getGelatoExecutorAddress = async (): Promise<string> => {
-    return this.contract.getAddress('gelatoExecutor')
-  }
-
-  /**
-   * @returns The Address of the Gelato Core Contract
-   */
-  getGelatoProviderAddress = async (): Promise<string> => {
-    return this.contract.getAddress('gelatoProvider')
-  }
-
-  /**
-   * @returns The Address of the Gelato Core Contract
-   */
-  getTimeConditionAddress = async (): Promise<string> => {
-    return this.contract.getAddress('conditionTime')
-  }
-
-  /**
-   * @returns The Address of the Gelato Core Contract
-   */
-  getActionWithdrawLiquidityAddress = async (): Promise<string> => {
-    return this.contract.getAddress('actionWithdrawLiquidityOmen')
-  }
-
-  getAddressesFromStorage = async (keys: string[]): Promise<any> => {
-    return this.contract.batchGetAddress(keys)
+    if (signerAddress) {
+      const mySigner: Wallet = provider.getSigner()
+      this.signer = mySigner
+    }
   }
 
   /**
    * Encode Submit Task Transaction.
    */
   encodeSubmitTimeBasedWithdrawalTask = async (taskData: SubmitTimeBasedWithdrawalData): Promise<string> => {
-    // const gelatoCoreAddress = await this.getGelatoCoreAddress()
-
-    // const providerAddress = await this.getGelatoProviderAddress()
-    // const gnosisSafeModuleAddress = await this.getGnosisSafeModuleAddress()
-    // const timeConditionAddress = await this.getTimeConditionAddress()
-    // const actionWithdrawLiquidityAddress = await this.getTimeConditionAddress()
-    const gAddresses = await this.getAddressesFromStorage([
-      'gelatoCore',
-      'gelatoProvider',
-      'providerModuleGnosisSafe',
-      'conditionTime',
-      'actionWithdrawLiquidityOmen',
-    ])
-
-    const gelatoCoreAddress = this.getAddressFromAddressStorage(gAddresses, 'gelatoCore')
-    const gelatoCore = new ethers.Contract(gelatoCoreAddress, gelatoCoreAbi, this.provider)
+    const gelatoCoreInterface = new ethers.utils.Interface(gelatoCoreAbi)
 
     const gelatoProvider = {
-      addr: this.getAddressFromAddressStorage(gAddresses, 'gelatoProvider'),
-      module: this.getAddressFromAddressStorage(gAddresses, 'providerModuleGnosisSafe'),
+      addr: this.addresses.gelatoProvider,
+      module: this.addresses.providerModuleGnosisSafe,
     }
 
     if (taskData.gelatoData.inputs === null) throw Error('Need Date')
@@ -139,7 +92,7 @@ class GelatoService {
     const timestamp = Date.parse(taskData.gelatoData.inputs.toString()) / 1000
 
     const condition = {
-      inst: this.getAddressFromAddressStorage(gAddresses, 'conditionTime'),
+      inst: this.addresses.conditionTime,
       data: ethers.utils.defaultAbiCoder.encode(['uint'], [timestamp]),
     }
 
@@ -156,11 +109,11 @@ class GelatoService {
     ])
 
     const action = {
-      addr: this.getAddressFromAddressStorage(gAddresses, 'actionWithdrawLiquidityOmen'),
+      addr: this.addresses.actionWithdrawLiquidity,
       data: actionWithdrawLiquidityData,
       operation: Operation.Delegatecall,
-      dataFlow: 0, // None,
-      value: 0, // None,
+      dataFlow: 0, // None
+      value: 0, // None
       termsOkCheck: false,
     }
 
@@ -173,7 +126,7 @@ class GelatoService {
 
     const expiryDate = 0 // Not expiring
 
-    return gelatoCore.interface.functions.submitTask.encode([gelatoProvider, task, expiryDate])
+    return gelatoCoreInterface.functions.submitTask.encode([gelatoProvider, task, expiryDate])
   }
 
   encodeCancelTask = (taskReceipt: TaskReceipt): string => {
@@ -182,9 +135,8 @@ class GelatoService {
   }
 
   encodeWhitelistGelatoAsModule = async (): Promise<string> => {
-    const gelatoCoreAddress = await this.getGelatoCoreAddress()
     const gnosisSafeInterface = new ethers.utils.Interface(gnosisSafeAbi)
-    return gnosisSafeInterface.functions.enableModule.encode([gelatoCoreAddress])
+    return gnosisSafeInterface.functions.enableModule.encode([this.addresses.gelatoCore])
   }
 
   decodeSubmitTimeBasedWithdrawalTask = async (hexData: string): Promise<any> => {
@@ -201,14 +153,17 @@ class GelatoService {
   }
 
   isGelatoWhitelistedModule = async (safeAddress: string): Promise<boolean> => {
-    const gelatoCoreAddress = await this.getGelatoCoreAddress()
-    const gnosisSafe = new ethers.Contract(safeAddress, gnosisSafeAbi, this.provider)
-    const modules = await gnosisSafe.getModules()
-    let isModule = false
-    modules.forEach((module: string) => {
-      if (ethers.utils.getAddress(module) === ethers.utils.getAddress(gelatoCoreAddress)) isModule = true
-    })
-    return isModule
+    try {
+      const gnosisSafe = new ethers.Contract(safeAddress, gnosisSafeAbi, this.provider)
+      const modules = await gnosisSafe.getModules()
+      let isModule = false
+      modules.forEach((module: string) => {
+        if (ethers.utils.getAddress(module) === ethers.utils.getAddress(this.addresses.gelatoCore)) isModule = true
+      })
+      return isModule
+    } catch {
+      return false
+    }
   }
 }
 

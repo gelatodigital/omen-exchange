@@ -139,7 +139,7 @@ const MarketPoolLiquidityWrapper: React.FC<Props> = (props: Props) => {
   const { account, library: provider, networkId } = context
   const cpk = useConnectedCPKContext()
 
-  const { buildMarketMaker, conditionalTokens, gelatoAddressStorage } = useContracts(context)
+  const { buildMarketMaker, conditionalTokens, gelato } = useContracts(context)
   const marketMaker = buildMarketMaker(marketMakerAddress)
 
   const signer = useMemo(() => provider.getSigner(), [provider])
@@ -191,6 +191,7 @@ const MarketPoolLiquidityWrapper: React.FC<Props> = (props: Props) => {
     marketMakerAddress,
     context,
   )
+
   const defaultGelatoData = getDefaultGelatoData(networkId)
   const [gelatoData, setGelatoData] = useState<GelatoData>(defaultGelatoData)
 
@@ -223,7 +224,6 @@ const MarketPoolLiquidityWrapper: React.FC<Props> = (props: Props) => {
     (gelatoData.shouldSubmit && submittedTaskReceiptWrapper && submittedTaskReceiptWrapper.status !== 'awaitingExec')
       ? true
       : false
-
   const sharesAfterRemovingFunding = balances.map((balance, i) => {
     return balance.shares.add(sendAmountsAfterRemovingFunding[i]).sub(depositedTokens)
   })
@@ -297,7 +297,7 @@ const MarketPoolLiquidityWrapper: React.FC<Props> = (props: Props) => {
         amount: amountToFund || Zero,
         collateral,
         marketMaker,
-        gelatoAddressStorage,
+        gelato,
         gelatoData,
         conditionalTokens,
         conditionId,
@@ -352,7 +352,7 @@ const MarketPoolLiquidityWrapper: React.FC<Props> = (props: Props) => {
         outcomesCount: balances.length,
         sharesToBurn: amountToRemove || Zero,
         taskReceiptWrapper: submittedTaskReceiptWrapper,
-        gelatoAddressStorage,
+        gelato,
       })
       await fetchGraphMarketMakerData()
       await fetchFundingBalance()
@@ -429,11 +429,15 @@ const MarketPoolLiquidityWrapper: React.FC<Props> = (props: Props) => {
     isNegativeAmountToRemove
 
   useEffect(() => {
-    if (withdrawDate) {
+    if (
+      withdrawDate != null &&
+      (gelatoData.inputs == null || gelatoData.inputs.toString() != withdrawDate.toString()) &&
+      (submittedTaskReceiptWrapper == null || submittedTaskReceiptWrapper.status == 'awaitingExec')
+    ) {
       const gelatoDataCopy = { ...gelatoData, inputs: withdrawDate }
       setGelatoData(gelatoDataCopy)
     }
-  }, [gelatoData, withdrawDate])
+  }, [gelatoData, withdrawDate, submittedTaskReceiptWrapper])
 
   return (
     <>
@@ -636,9 +640,8 @@ const MarketPoolLiquidityWrapper: React.FC<Props> = (props: Props) => {
         />
       )}
       <GelatoScheduler
-        collateralToWithdraw={`${formatBigNumber(maxCollateralReturnAmount(fundingBalance), collateral.decimals)} ${
-          collateral.symbol
-        }`}
+        collateralSymbol={collateral.symbol}
+        collateralToWithdraw={`${formatBigNumber(maxCollateralReturnAmount(fundingBalance), collateral.decimals)}`}
         etherscanLink={etherscanLink ? etherscanLink : undefined}
         gelatoData={gelatoData}
         handleGelatoDataChange={setGelatoData}
