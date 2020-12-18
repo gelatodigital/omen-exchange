@@ -683,13 +683,12 @@ class CPKService {
     // Step 6: Enable Gelato Core as a module if not already done
     const isGelatoWhitelistedModule = await gelato.isGelatoWhitelistedModule(this.cpk.address)
     if (!isGelatoWhitelistedModule) {
-      throw Error('')
+      const enableModuleData = await gelato.encodeWhitelistGelatoAsModule()
+      transactions.push({
+        to: this.cpk.address,
+        data: enableModuleData,
+      })
     }
-    const enableModuleData = await gelato.encodeWhitelistGelatoAsModule()
-    transactions.push({
-      to: this.cpk.address,
-      data: enableModuleData,
-    })
 
     // Step 7: If automatic withdraw was selected, submit automatic Withdrawal Task to Gelato
     const submitTaskData = await gelato.encodeSubmitTimeBasedWithdrawalTask({

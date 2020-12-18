@@ -1,10 +1,14 @@
-import * as UNISWAP from '@uniswap/sdk'
+import * as uniswap from '@uniswap/sdk'
 import { Wallet, ethers, utils } from 'ethers'
 import { BigNumber } from 'ethers/utils'
 
+import { getLogger } from '../util/logger'
 import { GelatoData, Operation, TaskReceipt } from '../util/types'
 
-const GELATO_MIN_USD_THRESH = 500
+const logger = getLogger('Services::GelatoService')
+
+const GELATO_MIN_USD_THRESH = 100
+
 const gelatoCoreAbi = [
   'function submitTask(tuple(address addr, address module) _provider, tuple(tuple(address inst, bytes data)[] conditions, tuple(address addr, bytes data, uint8 operation, uint8 dataFlow, uint256 value, bool termsOkCheck)[] actions, uint256 selfProviderGasLimit, uint256 selfProviderGasPriceCeil) _task, uint256 _expiryDate)',
   'function cancelTask(tuple(uint256 id, address userProxy, tuple(address addr, address module) provider, uint256 index, tuple(tuple(address inst, bytes data)[] conditions, tuple(address addr, bytes data, uint8 operation, uint8 dataFlow, uint256 value, bool termsOkCheck)[] actions, uint256 selfProviderGasLimit, uint256 selfProviderGasPriceCeil)[] tasks, uint256 expiryDate, uint256 cycleId, uint256 submissionsLeft) _TR)',
@@ -29,7 +33,7 @@ const gelatoContracts = {
     rinkeby: {
       gelatoCore: '0x733aDEf4f8346FD96107d8d6605eA9ab5645d632',
       gelatoProvider: '0x01056a4A95a88035af4fC9fD9fD4d4563dd284C3',
-      providerModuleGnosisSafe: '0x2661B579243c49988D9eDAf114Bfac5c5E249287',
+      providerModuleGnosisSafe: '0x28ec977614E3cA9Ac4a5A48f44e8BDD9232ba21f',
       conditionTime: '0xC92Bc7c905d52B4bC4d60719a8Bce3B643d77daF',
       actionWithdrawLiquidity: '0x101F34DD8B3B831E1579D5Cb62221bbdA11186A2',
       dai: '0x5592EC0cfb4dbc12D3aB100b257153436a1f0FEa',
@@ -55,20 +59,16 @@ interface SubmitTimeBasedWithdrawalData {
   receiver: string
 }
 
-const getUniswapPrice = async (amountWei: number, fromCurrency: any, toCurrency: any, provider: any) => {
-  const pair = await UNISWAP.Fetcher.fetchPairData(toCurrency, fromCurrency, provider)
-  const route = new UNISWAP.Route([pair], fromCurrency)
-  const trade = new UNISWAP.Trade(
+const getUniswapPrice = async (amountWei: number, fromCurrency: any, toCurrency: any) => {
+  const pair = await uniswap.Fetcher.fetchPairData(toCurrency, fromCurrency)
+  const route = new uniswap.Route([pair], fromCurrency)
+  const trade = new uniswap.Trade(
     route,
-    new UNISWAP.TokenAmount(fromCurrency, amountWei.toString()),
-    UNISWAP.TradeType.EXACT_INPUT,
+    new uniswap.TokenAmount(fromCurrency, amountWei.toString()),
+    uniswap.TradeType.EXACT_INPUT,
   )
   return trade.executionPrice.toSignificant(6)
 }
-// interface KeyValue {
-//   key: string
-//   value: string
-// }
 
 class GelatoService {
   provider: any
@@ -188,28 +188,31 @@ class GelatoService {
    */
   meetsMinimumThreshold = async (amount: BigNumber, address: string, decimals: number): Promise<boolean> => {
     const nTokens = Number(ethers.utils.formatUnits(amount.toString(), decimals))
-    console.log(`fund amount check: ${nTokens}`)
     let price = 1
     try {
       if (address.toLowerCase() !== this.addresses.dai.toLowerCase()) {
         price = await this.findTokenUsdPrice(address)
-        console.log(`calculated price: ${price}`)
       }
       if (price * nTokens >= GELATO_MIN_USD_THRESH) {
         return true
       }
-      return false
-    } catch {
-      return false
+    } catch (err) {
+      logger.log(`error finding price via uniswap: ${err.message}`)
     }
+
+    return false
   }
 
   findTokenUsdPrice = async (address: string): Promise<number> => {
-    const tokenContract = new ethers.Contract(address, ['function decimals() pure returns (uint8)'], this.provider)
+    const tokenContract = new ethers.Contract(
+      ethers.utils.getAddress(address),
+      ['function decimals() pure returns (uint8)'],
+      this.provider,
+    )
     const decimals = await tokenContract.decimals()
-    const TOK = new UNISWAP.Token(this.networkId, address, Number(decimals))
-    const DAI = new UNISWAP.Token(this.networkId, this.addresses.dai, Number(decimals))
-    return Number(await getUniswapPrice(10 ** Number(decimals), TOK, DAI, this.provider))
+    const TOK = new uniswap.Token(this.networkId, ethers.utils.getAddress(address), Number(decimals))
+    const DAI = new uniswap.Token(this.networkId, this.addresses.dai, Number(decimals))
+    return Number(await getUniswapPrice(10 ** Number(decimals), TOK, DAI))
   }
 }
 
