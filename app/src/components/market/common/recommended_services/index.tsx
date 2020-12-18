@@ -264,6 +264,15 @@ export const GelatoScheduler: React.FC<RecommendedServicesProps> = (props: Recom
             </IconStyled>
           </TaskStatusBox>
         )
+      case 'canceled':
+        return (
+          <TaskStatusBox>
+            <TaskStatus color="yellow">{`canceled`}</TaskStatus>
+            <IconStyled color={'yellow'}>
+              <IconAlert></IconAlert>
+            </IconStyled>
+          </TaskStatusBox>
+        )
     }
   }
 
