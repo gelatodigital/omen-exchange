@@ -346,12 +346,14 @@ class CPKService {
 
       if (gelatoData.shouldSubmit) {
         const gelatoTransactions = await this.addGelatoSubmitTransaction(
+          marketData.funding,
           gelatoData,
           gelato,
           outcomes.length,
           conditionalTokens,
           conditionId,
           collateral.address,
+          collateral.decimals,
           predictedMarketMakerAddress,
           account,
         )
@@ -493,12 +495,14 @@ class CPKService {
           submittedTaskReceiptWrapper.status !== 'awaitingExec')
       ) {
         const gelatoTransactions = await this.addGelatoSubmitTransaction(
+          amount,
           gelatoData,
           gelato,
           outcomeSlotCountInt,
           conditionalTokens,
           conditionId,
           collateral.address,
+          collateral.decimals,
           marketMaker.address,
           account,
         )
@@ -654,30 +658,38 @@ class CPKService {
   }
 
   addGelatoSubmitTransaction = async (
+    collateralAmount: BigNumber,
     gelatoData: GelatoData,
     gelato: GelatoService,
     outcomeCount: number,
     conditionalTokens: ConditionalTokenService,
     conditionId: string,
     collateralAddress: string,
+    collateralDecimals: number,
     marketMakerAddress: string,
     account: string,
   ) => {
     const transactions = []
+    const meetsGelatoThreshold = await gelato.meetsMinimumThreshold(
+      collateralAmount,
+      collateralAddress,
+      collateralDecimals,
+    )
+
+    if (!meetsGelatoThreshold) {
+      throw Error('belowGelatoThreshold')
+    }
 
     // Step 6: Enable Gelato Core as a module if not already done
-    try {
-      const isGelatoWhitelistedModule = await gelato.isGelatoWhitelistedModule(this.cpk.address)
-      if (!isGelatoWhitelistedModule) {
-        throw Error('')
-      }
-    } catch {
-      const enableModuleData = await gelato.encodeWhitelistGelatoAsModule()
-      transactions.push({
-        to: this.cpk.address,
-        data: enableModuleData,
-      })
+    const isGelatoWhitelistedModule = await gelato.isGelatoWhitelistedModule(this.cpk.address)
+    if (!isGelatoWhitelistedModule) {
+      throw Error('')
     }
+    const enableModuleData = await gelato.encodeWhitelistGelatoAsModule()
+    transactions.push({
+      to: this.cpk.address,
+      data: enableModuleData,
+    })
 
     // Step 7: If automatic withdraw was selected, submit automatic Withdrawal Task to Gelato
     const submitTaskData = await gelato.encodeSubmitTimeBasedWithdrawalTask({
