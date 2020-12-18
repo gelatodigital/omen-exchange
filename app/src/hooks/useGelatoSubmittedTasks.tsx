@@ -36,6 +36,7 @@ export const useGelatoSubmittedTasks = (
   const [withdrawDate, setWithdrawDate] = useState<Date | null>(null)
   const [etherscanLink, setEtherscanLink] = useState<string | null>(null)
   const [needUpdate, setNeedUpdate] = useState<boolean>(false)
+  const [taskLength, setTaskLength] = useState<number>(0)
 
   const { data: GelatoSubmittedData, error } = useQuery(GelatoSubmitted, {
     notifyOnNetworkStatusChange: true,
@@ -84,12 +85,16 @@ export const useGelatoSubmittedTasks = (
       } catch (err) {
         logger.log(err.message)
       }
+    } else {
+      if (taskLength != GelatoSubmittedData.taskReceiptWrappers.length) {
+        setTaskLength(GelatoSubmittedData.taskReceiptWrappers.length)
+      }
     }
   }
 
   useEffect(() => {
     setNeedUpdate(true)
-  }, [cpkAddress])
+  }, [cpkAddress, taskLength])
 
   return {
     submittedTaskReceiptWrapper,
