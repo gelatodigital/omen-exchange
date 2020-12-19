@@ -1,13 +1,13 @@
-import * as uniswap from '@uniswap/sdk'
-import { Wallet, ethers, utils } from 'ethers'
+import { Contract, Wallet, constants, ethers, utils } from 'ethers'
 import { BigNumber } from 'ethers/utils'
 
 import { getLogger } from '../util/logger'
+import { getToken } from '../util/networks'
 import { GelatoData, Operation, TaskReceipt } from '../util/types'
 
 const logger = getLogger('Services::GelatoService')
 
-const GELATO_MIN_USD_THRESH = 100
+const GELATO_MIN_USD_THRESH = 500
 
 const gelatoCoreAbi = [
   'function submitTask(tuple(address addr, address module) _provider, tuple(tuple(address inst, bytes data)[] conditions, tuple(address addr, bytes data, uint8 operation, uint8 dataFlow, uint256 value, bool termsOkCheck)[] actions, uint256 selfProviderGasLimit, uint256 selfProviderGasPriceCeil) _task, uint256 _expiryDate)',
@@ -36,7 +36,6 @@ const gelatoContracts = {
       providerModuleGnosisSafe: '0x28ec977614E3cA9Ac4a5A48f44e8BDD9232ba21f',
       conditionTime: '0xC92Bc7c905d52B4bC4d60719a8Bce3B643d77daF',
       actionWithdrawLiquidity: '0x101F34DD8B3B831E1579D5Cb62221bbdA11186A2',
-      dai: '0x5592EC0cfb4dbc12D3aB100b257153436a1f0FEa',
     },
     mainnet: {
       gelatoCore: '0x025030bdaa159f281cae63873e68313a703725a5',
@@ -44,9 +43,31 @@ const gelatoContracts = {
       providerModuleGnosisSafe: '0x2E87AD9BBdaa9113cd5cA1920c624E2749D7086B',
       conditionTime: '0x63129681c487d231aa9148e1e21837165f38deaf',
       actionWithdrawLiquidity: '0x301E130DAA16B2F8FAeB21E1a328EAB0d606AC12',
-      dai: '0x6B175474E89094C44Da98b954EedeAC495271d0F',
     },
   },
+}
+
+// Uniswap token prices
+const uniswapV2FactoryAbi = ['function getPair(address,address) view returns (address pair)']
+const uniswapV2PairAbi = [
+  'function getReserves() view returns (uint112, uint112, uint32)',
+  'function token0() view returns (address)',
+]
+const uniswapV2FactoryAddress = '0x5C69bEe701ef814a2B6a3EDD4B1652CB9cc5aA6f'
+
+const getUniswapPrice = async (tokenA: any, tokenB: any, provider: any): Promise<number> => {
+  const factoryContract = new Contract(uniswapV2FactoryAddress, uniswapV2FactoryAbi, provider)
+  const pairAddress = factoryContract.getPair(tokenA.address, tokenB.address)
+  if (pairAddress == constants.AddressZero) {
+    throw Error('pair does not exist')
+  }
+  const pairContract = new Contract(pairAddress, uniswapV2PairAbi, provider)
+  const [reserves0, reserves1] = await pairContract.getReserves()
+  const token0 = await pairContract.token0()
+  const balances =
+    tokenA.address.toLowerCase() === token0.toLowerCase() ? [reserves0, reserves1] : [reserves1, reserves0]
+  const decimalCoeff = 10 ** tokenA.decimals / 10 ** tokenB.decimals
+  return Number(decimalCoeff * (balances[1] / balances[0]))
 }
 
 interface SubmitTimeBasedWithdrawalData {
@@ -59,34 +80,26 @@ interface SubmitTimeBasedWithdrawalData {
   receiver: string
 }
 
-const getUniswapPrice = async (amountWei: number, fromCurrency: any, toCurrency: any) => {
-  const pair = await uniswap.Fetcher.fetchPairData(toCurrency, fromCurrency)
-  const route = new uniswap.Route([pair], fromCurrency)
-  const trade = new uniswap.Trade(
-    route,
-    new uniswap.TokenAmount(fromCurrency, amountWei.toString()),
-    uniswap.TradeType.EXACT_INPUT,
-  )
-  return trade.executionPrice.toSignificant(6)
-}
-
 class GelatoService {
   provider: any
   signer: any
   addresses: any
   networkId: number
+  dai: any
+  weth: any
 
   constructor(provider: any, signerAddress: Maybe<string>, networkId: number) {
     this.provider = provider
-    this.signer = null
     this.networkId = networkId
+    this.dai = getToken(this.networkId, 'dai')
+    this.weth = getToken(this.networkId, 'weth')
+    this.addresses = null
     if (networkId == 1) {
       this.addresses = gelatoContracts.addresses.mainnet
     } else if (networkId == 4) {
       this.addresses = gelatoContracts.addresses.rinkeby
-    } else {
-      throw Error(`unknown networkId: ${networkId}`)
     }
+    this.signer = null
     if (signerAddress) {
       const mySigner: Wallet = provider.getSigner()
       this.signer = mySigner
@@ -97,7 +110,7 @@ class GelatoService {
    * Encode Submit Task Transaction.
    */
   encodeSubmitTimeBasedWithdrawalTask = async (taskData: SubmitTimeBasedWithdrawalData): Promise<string> => {
-    const gelatoCoreInterface = new ethers.utils.Interface(gelatoCoreAbi)
+    const gelatoCoreInterface = new utils.Interface(gelatoCoreAbi)
 
     const gelatoProvider = {
       addr: this.addresses.gelatoProvider,
@@ -110,7 +123,7 @@ class GelatoService {
 
     const condition = {
       inst: this.addresses.conditionTime,
-      data: ethers.utils.defaultAbiCoder.encode(['uint'], [timestamp]),
+      data: utils.defaultAbiCoder.encode(['uint'], [timestamp]),
     }
 
     const actionWithdrawLiquidityInterface = new utils.Interface(actionWithdrawLiquidutyAbi)
@@ -120,7 +133,7 @@ class GelatoService {
       taskData.fpmmAddress,
       taskData.positionIds,
       taskData.conditionId,
-      ethers.constants.HashZero,
+      constants.HashZero,
       taskData.collateralTokenAddress,
       taskData.receiver,
     ])
@@ -147,25 +160,25 @@ class GelatoService {
   }
 
   encodeCancelTask = (taskReceipt: TaskReceipt): string => {
-    const gelatoCoreInterface = new ethers.utils.Interface(gelatoCoreAbi)
+    const gelatoCoreInterface = new utils.Interface(gelatoCoreAbi)
     return gelatoCoreInterface.functions.cancelTask.encode([taskReceipt])
   }
 
   encodeWhitelistGelatoAsModule = async (): Promise<string> => {
-    const gnosisSafeInterface = new ethers.utils.Interface(gnosisSafeAbi)
+    const gnosisSafeInterface = new utils.Interface(gnosisSafeAbi)
     return gnosisSafeInterface.functions.enableModule.encode([this.addresses.gelatoCore])
   }
 
   decodeSubmitTimeBasedWithdrawalTask = async (hexData: string): Promise<any> => {
-    const data = ethers.utils.defaultAbiCoder.decode(
+    const data = utils.defaultAbiCoder.decode(
       ['address', 'address', 'uint256[]', 'bytes32', 'bytes32', 'address', 'address'],
-      ethers.utils.hexDataSlice(hexData, 4),
+      utils.hexDataSlice(hexData, 4),
     )
     return data
   }
 
   decodeTimeConditionData = async (hexData: string): Promise<any> => {
-    const data = ethers.utils.defaultAbiCoder.decode(['uint256'], hexData)
+    const data = utils.defaultAbiCoder.decode(['uint256'], hexData)
     return data
   }
 
@@ -175,7 +188,7 @@ class GelatoService {
       const modules = await gnosisSafe.getModules()
       let isModule = false
       modules.forEach((module: string) => {
-        if (ethers.utils.getAddress(module) === ethers.utils.getAddress(this.addresses.gelatoCore)) isModule = true
+        if (utils.getAddress(module) === utils.getAddress(this.addresses.gelatoCore)) isModule = true
       })
       return isModule
     } catch {
@@ -187,32 +200,33 @@ class GelatoService {
    * Check if transaction meets minimum threshold
    */
   meetsMinimumThreshold = async (amount: BigNumber, address: string, decimals: number): Promise<boolean> => {
-    const nTokens = Number(ethers.utils.formatUnits(amount.toString(), decimals))
-    let price = 1
+    const nTokens = Number(utils.formatUnits(amount.toString(), decimals))
     try {
-      if (address.toLowerCase() !== this.addresses.dai.toLowerCase()) {
-        price = await this.findTokenUsdPrice(address)
-      }
+      const price = await this.findTokenUsdPrice(address, decimals)
+      // console.log(`found dollar value: $${price} * ${nTokens} = $${price * nTokens}`)
       if (price * nTokens >= GELATO_MIN_USD_THRESH) {
         return true
       }
     } catch (err) {
-      logger.log(`error finding price via uniswap: ${err.message}`)
+      logger.error(`error finding price via uniswap: ${err.message}`)
     }
-
     return false
   }
 
-  findTokenUsdPrice = async (address: string): Promise<number> => {
-    const tokenContract = new ethers.Contract(
-      ethers.utils.getAddress(address),
-      ['function decimals() pure returns (uint8)'],
-      this.provider,
-    )
-    const decimals = await tokenContract.decimals()
-    const TOK = new uniswap.Token(this.networkId, ethers.utils.getAddress(address), Number(decimals))
-    const DAI = new uniswap.Token(this.networkId, this.addresses.dai, Number(decimals))
-    return Number(await getUniswapPrice(10 ** Number(decimals), TOK, DAI))
+  findTokenUsdPrice = async (address: string, decimals: number): Promise<number> => {
+    const token = {
+      address: address,
+      decimals: decimals,
+    }
+
+    // assumes collateral token will always have uniswap pair with either DAI or ETH
+    try {
+      return await getUniswapPrice(token, this.dai, this.provider)
+    } catch {
+      const ethUsdPrice = await getUniswapPrice(this.weth, this.dai, this.provider)
+      const tokenEthPrice = await getUniswapPrice(token, this.weth, this.provider)
+      return ethUsdPrice * tokenEthPrice
+    }
   }
 }
 

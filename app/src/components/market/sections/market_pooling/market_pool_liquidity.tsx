@@ -435,13 +435,12 @@ const MarketPoolLiquidityWrapper: React.FC<Props> = (props: Props) => {
   useEffect(() => {
     if (
       withdrawDate != null &&
-      (gelatoData.inputs == null || gelatoData.inputs.toString() != withdrawDate.toString()) &&
-      (submittedTaskReceiptWrapper == null || submittedTaskReceiptWrapper.status == 'awaitingExec')
+      (gelatoData.inputs == null || gelatoData.inputs.toString() != withdrawDate.toString())
     ) {
       const gelatoDataCopy = { ...gelatoData, inputs: withdrawDate }
       setGelatoData(gelatoDataCopy)
     }
-  }, [gelatoData, withdrawDate, submittedTaskReceiptWrapper])
+  }, [gelatoData, withdrawDate])
 
   return (
     <>
@@ -653,7 +652,7 @@ const MarketPoolLiquidityWrapper: React.FC<Props> = (props: Props) => {
           const gelatoDataCopy = { ...gelatoData, inputs: newDate }
           setGelatoData(gelatoDataCopy)
         }}
-        isScheduled={submittedTaskReceiptWrapper && submittedTaskReceiptWrapper.status !== 'canceled' ? true : false}
+        isScheduled={submittedTaskReceiptWrapper ? true : false}
         noMarginBottom={false}
         resolution={resolutionDate !== null ? marketMakerData.question.resolution : new Date()}
         taskStatus={submittedTaskReceiptWrapper ? submittedTaskReceiptWrapper.status : undefined}
