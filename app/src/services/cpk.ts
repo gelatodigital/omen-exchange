@@ -352,8 +352,7 @@ class CPKService {
           outcomes.length,
           conditionalTokens,
           conditionId,
-          collateral.address,
-          collateral.decimals,
+          collateral,
           predictedMarketMakerAddress,
           account,
         )
@@ -501,8 +500,7 @@ class CPKService {
           outcomeSlotCountInt,
           conditionalTokens,
           conditionId,
-          collateral.address,
-          collateral.decimals,
+          collateral,
           marketMaker.address,
           account,
         )
@@ -664,20 +662,20 @@ class CPKService {
     outcomeCount: number,
     conditionalTokens: ConditionalTokenService,
     conditionId: string,
-    collateralAddress: string,
-    collateralDecimals: number,
+    collateralToken: Token,
     marketMakerAddress: string,
     account: string,
   ) => {
     const transactions = []
-    const meetsGelatoThreshold = await gelato.meetsMinimumThreshold(
-      collateralAmount,
-      collateralAddress,
-      collateralDecimals,
-    )
+    const minDepositAmount = await gelato.minimumTokenAmount(collateralToken.address, collateralToken.decimals)
+    const depositAmount = Number(ethers.utils.formatUnits(collateralAmount, collateralToken.decimals))
 
-    if (!meetsGelatoThreshold) {
-      throw Error('belowGelatoThreshold')
+    if (minDepositAmount > depositAmount) {
+      throw Error(
+        `To use Gelato's auto-withdraw service, you must deposit at least ${minDepositAmount.toFixed(5)} ${
+          collateralToken.symbol
+        }`,
+      )
     }
 
     // Step 6: Enable Gelato Core as a module if not already done
@@ -695,9 +693,9 @@ class CPKService {
       gelatoData,
       conditionalTokensAddress: conditionalTokens.address,
       fpmmAddress: marketMakerAddress,
-      positionIds: await conditionalTokens.getPositionIds(outcomeCount, conditionId, collateralAddress),
+      positionIds: await conditionalTokens.getPositionIds(outcomeCount, conditionId, collateralToken.address),
       conditionId,
-      collateralTokenAddress: collateralAddress,
+      collateralTokenAddress: collateralToken.address,
       receiver: account,
     })
 

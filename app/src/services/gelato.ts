@@ -1,5 +1,4 @@
 import { Contract, Wallet, constants, ethers, utils } from 'ethers'
-import { BigNumber } from 'ethers/utils'
 
 import { getLogger } from '../util/logger'
 import { getToken } from '../util/networks'
@@ -199,18 +198,15 @@ class GelatoService {
   /**
    * Check if transaction meets minimum threshold
    */
-  meetsMinimumThreshold = async (amount: BigNumber, address: string, decimals: number): Promise<boolean> => {
-    const nTokens = Number(utils.formatUnits(amount.toString(), decimals))
+  minimumTokenAmount = async (tokenAddress: string, tokenDecimals: number): Promise<number> => {
     try {
-      const price = await this.findTokenUsdPrice(address, decimals)
-      // console.log(`found dollar value: $${price} * ${nTokens} = $${price * nTokens}`)
-      if (price * nTokens >= GELATO_MIN_USD_THRESH) {
-        return true
-      }
+      const price = await this.findTokenUsdPrice(tokenAddress, tokenDecimals)
+      // console.log(`found dollar value: ${GELATO_MIN_USD_THRESH / price} * $${price} = $${GELATO_MIN_USD_THRESH}`)
+      return GELATO_MIN_USD_THRESH / price
     } catch (err) {
       logger.error(`error finding price via uniswap: ${err.message}`)
     }
-    return false
+    return 0
   }
 
   findTokenUsdPrice = async (address: string, decimals: number): Promise<number> => {

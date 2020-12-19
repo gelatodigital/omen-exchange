@@ -316,10 +316,8 @@ const MarketPoolLiquidityWrapper: React.FC<Props> = (props: Props) => {
         : setMessage(`Successfully deposited ${fundsAmount} ${collateral.symbol}`)
     } catch (err) {
       setStatus(Status.Error)
-      err.message == 'belowGelatoThreshold'
-        ? setMessage(
-            `Error trying to deposit funds. (Using Gelato auto-withdraw service is restricted to deposits worth $500 or more)`,
-          )
+      err.message.includes('Gelato')
+        ? setMessage(`Error trying to deposit funds. (${err.message})`)
         : setMessage(`Error trying to deposit funds.`)
       logger.error(`${message} - ${err.message}`)
     }
