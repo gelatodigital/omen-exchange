@@ -103,7 +103,7 @@ class ConditionalTokenService {
   }
 
   // Get position Ids
-  getPositionIds = async (numOutcomes: number, conditionId: string, collateralAddress: string): Promise<any[]> => {
+  getPositionIds = async (numOutcomes: number, conditionId: string, collateralAddress: string): Promise<number[]> => {
     const indexSet = getIndexSets(numOutcomes)
     const positionIds = []
     for (const index of indexSet) {

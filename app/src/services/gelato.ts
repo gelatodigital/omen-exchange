@@ -1,12 +1,11 @@
 import { Contract, Wallet, constants, ethers, utils } from 'ethers'
 
+import { GELATO_MIN_USD_THRESH } from '../common/constants'
 import { getLogger } from '../util/logger'
 import { getToken } from '../util/networks'
 import { GelatoData, Operation, TaskReceipt } from '../util/types'
 
 const logger = getLogger('Services::GelatoService')
-
-const GELATO_MIN_USD_THRESH = 500
 
 const gelatoCoreAbi = [
   'function submitTask(tuple(address addr, address module) _provider, tuple(tuple(address inst, bytes data)[] conditions, tuple(address addr, bytes data, uint8 operation, uint8 dataFlow, uint256 value, bool termsOkCheck)[] actions, uint256 selfProviderGasLimit, uint256 selfProviderGasPriceCeil) _task, uint256 _expiryDate)',
@@ -22,7 +21,45 @@ const gnosisSafeAbi = [
   'function getModules() public view returns (address[])',
 ]
 
-const gelatoContracts = {
+// Uniswap token prices
+const uniswapV2FactoryAbi = ['function getPair(address,address) view returns (address pair)']
+const uniswapV2PairAbi = [
+  'function getReserves() view returns (uint112, uint112, uint32)',
+  'function token0() view returns (address)',
+]
+const uniswapV2FactoryAddress = '0x5C69bEe701ef814a2B6a3EDD4B1652CB9cc5aA6f'
+
+interface NetworkContracts {
+  gelatoCore: string
+  gelatoProvider: string
+  providerModuleGnosisSafe: string
+  conditionTime: string
+  actionWithdrawLiquidity: string
+}
+
+interface GelatoContracts {
+  abis: {
+    gelatoCore: string[]
+    actionWithdrawLiquidity: string[]
+    gnosisSafe: string[]
+  }
+  addresses: {
+    rinkeby: NetworkContracts
+    mainnet: NetworkContracts
+  }
+}
+
+interface SubmitTimeBasedWithdrawalData {
+  gelatoData: GelatoData
+  conditionalTokensAddress: string
+  fpmmAddress: string
+  positionIds: number[]
+  conditionId: string
+  collateralTokenAddress: string
+  receiver: string
+}
+
+const gelatoContracts: GelatoContracts = {
   abis: {
     gelatoCore: gelatoCoreAbi,
     actionWithdrawLiquidity: actionWithdrawLiquidutyAbi,
@@ -45,14 +82,6 @@ const gelatoContracts = {
     },
   },
 }
-
-// Uniswap token prices
-const uniswapV2FactoryAbi = ['function getPair(address,address) view returns (address pair)']
-const uniswapV2PairAbi = [
-  'function getReserves() view returns (uint112, uint112, uint32)',
-  'function token0() view returns (address)',
-]
-const uniswapV2FactoryAddress = '0x5C69bEe701ef814a2B6a3EDD4B1652CB9cc5aA6f'
 
 const getUniswapPrice = async (tokenA: any, tokenB: any, provider: any): Promise<number> => {
   const factoryContract = new Contract(uniswapV2FactoryAddress, uniswapV2FactoryAbi, provider)
@@ -82,21 +111,22 @@ interface SubmitTimeBasedWithdrawalData {
 class GelatoService {
   provider: any
   signer: any
-  addresses: any
   networkId: number
   dai: any
   weth: any
+  addresses: NetworkContracts
 
   constructor(provider: any, signerAddress: Maybe<string>, networkId: number) {
     this.provider = provider
     this.networkId = networkId
     this.dai = getToken(this.networkId, 'dai')
     this.weth = getToken(this.networkId, 'weth')
-    this.addresses = null
     if (networkId == 1) {
       this.addresses = gelatoContracts.addresses.mainnet
     } else if (networkId == 4) {
       this.addresses = gelatoContracts.addresses.rinkeby
+    } else {
+      throw Error(`Unknown networkId: ${networkId}`)
     }
     this.signer = null
     if (signerAddress) {
@@ -106,17 +136,17 @@ class GelatoService {
   }
 
   /**
-   * Encode Submit Task Transaction.
+   * Encode Auto Withdraw Task Submission
    */
   encodeSubmitTimeBasedWithdrawalTask = async (taskData: SubmitTimeBasedWithdrawalData): Promise<string> => {
+    if (taskData.gelatoData.inputs === null) throw Error('Need Date')
+
     const gelatoCoreInterface = new utils.Interface(gelatoCoreAbi)
 
     const gelatoProvider = {
       addr: this.addresses.gelatoProvider,
       module: this.addresses.providerModuleGnosisSafe,
     }
-
-    if (taskData.gelatoData.inputs === null) throw Error('Need Date')
 
     const timestamp = Date.parse(taskData.gelatoData.inputs.toString()) / 1000
 
@@ -158,16 +188,25 @@ class GelatoService {
     return gelatoCoreInterface.functions.submitTask.encode([gelatoProvider, task, expiryDate])
   }
 
+  /**
+   * Cancel pending automated withdrawal task
+   */
   encodeCancelTask = (taskReceipt: TaskReceipt): string => {
     const gelatoCoreInterface = new utils.Interface(gelatoCoreAbi)
     return gelatoCoreInterface.functions.cancelTask.encode([taskReceipt])
   }
 
+  /**
+   * Whitelist GelatoCore as Module
+   */
   encodeWhitelistGelatoAsModule = async (): Promise<string> => {
     const gnosisSafeInterface = new utils.Interface(gnosisSafeAbi)
     return gnosisSafeInterface.functions.enableModule.encode([this.addresses.gelatoCore])
   }
 
+  /**
+   * Decode Action Data
+   */
   decodeSubmitTimeBasedWithdrawalTask = async (hexData: string): Promise<any> => {
     const data = utils.defaultAbiCoder.decode(
       ['address', 'address', 'uint256[]', 'bytes32', 'bytes32', 'address', 'address'],
@@ -176,11 +215,17 @@ class GelatoService {
     return data
   }
 
+  /**
+   * Decode Condition Data
+   */
   decodeTimeConditionData = async (hexData: string): Promise<any> => {
     const data = utils.defaultAbiCoder.decode(['uint256'], hexData)
     return data
   }
 
+  /**
+   * Check if Gnosis Safe whitelisted Gelato Core as a module
+   */
   isGelatoWhitelistedModule = async (safeAddress: string): Promise<boolean> => {
     try {
       const gnosisSafe = new ethers.Contract(safeAddress, gnosisSafeAbi, this.provider)

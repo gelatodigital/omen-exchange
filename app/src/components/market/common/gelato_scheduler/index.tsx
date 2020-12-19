@@ -148,7 +148,7 @@ const GelatoIconCircle = styled.button<{ active?: boolean }>`
   width: ${props => props.theme.buttonCircle.dimensions};
 `
 
-export type RecommendedServicesProps = DOMAttributes<HTMLDivElement> & {
+export type GelatoSchedulerProps = DOMAttributes<HTMLDivElement> & {
   noMarginBottom: boolean
   resolution: Date
   gelatoData: GelatoData
@@ -162,7 +162,7 @@ export type RecommendedServicesProps = DOMAttributes<HTMLDivElement> & {
   handleGelatoDataInputsChange: (newDate: Date | null) => any
 }
 
-export const GelatoScheduler: React.FC<RecommendedServicesProps> = (props: RecommendedServicesProps) => {
+export const GelatoScheduler: React.FC<GelatoSchedulerProps> = (props: GelatoSchedulerProps) => {
   const {
     collateralSymbol,
     collateralToWithdraw,
