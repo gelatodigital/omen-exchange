@@ -59,6 +59,11 @@ interface SubmitTimeBasedWithdrawalData {
   receiver: string
 }
 
+interface UniToken {
+  address: string
+  decimals: number
+}
+
 const gelatoContracts: GelatoContracts = {
   abis: {
     gelatoCore: gelatoCoreAbi,
@@ -83,7 +88,7 @@ const gelatoContracts: GelatoContracts = {
   },
 }
 
-const getUniswapPrice = async (tokenA: any, tokenB: any, provider: any): Promise<number> => {
+const getUniswapPrice = async (tokenA: UniToken, tokenB: UniToken, provider: any): Promise<number> => {
   const factoryContract = new Contract(uniswapV2FactoryAddress, uniswapV2FactoryAbi, provider)
   const pairAddress = factoryContract.getPair(tokenA.address, tokenB.address)
   if (pairAddress == constants.AddressZero) {
@@ -93,7 +98,7 @@ const getUniswapPrice = async (tokenA: any, tokenB: any, provider: any): Promise
   const [reserves0, reserves1] = await pairContract.getReserves()
   const token0 = await pairContract.token0()
   const balances =
-    tokenA.address.toLowerCase() === token0.toLowerCase() ? [reserves0, reserves1] : [reserves1, reserves0]
+    utils.getAddress(tokenA.address) === utils.getAddress(token0) ? [reserves0, reserves1] : [reserves1, reserves0]
   const decimalCoeff = 10 ** tokenA.decimals / 10 ** tokenB.decimals
   return Number(decimalCoeff * (balances[1] / balances[0]))
 }
@@ -241,21 +246,22 @@ class GelatoService {
   }
 
   /**
-   * Check if transaction meets minimum threshold
+   * Returns min collateral amount to schedule auto withdraw
    */
   minimumTokenAmount = async (tokenAddress: string, tokenDecimals: number): Promise<number> => {
     try {
       const price = await this.findTokenUsdPrice(tokenAddress, tokenDecimals)
-      // console.log(`found dollar value: ${GELATO_MIN_USD_THRESH / price} * $${price} = $${GELATO_MIN_USD_THRESH}`)
       return GELATO_MIN_USD_THRESH / price
     } catch (err) {
       logger.error(`error finding price via uniswap: ${err.message}`)
+      throw new Error(`error finding price via uniswap`)
     }
-    return 0
   }
-
+  /**
+   * Returns Uniswap price of collateral to DAI
+   */
   findTokenUsdPrice = async (address: string, decimals: number): Promise<number> => {
-    const token = {
+    const token: UniToken = {
       address: address,
       decimals: decimals,
     }

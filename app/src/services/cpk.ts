@@ -114,8 +114,8 @@ class CPKService {
     const cpkAddresses = getCPKAddresses(network.chainId)
     const networks = cpkAddresses
       ? {
-        [network.chainId]: cpkAddresses,
-      }
+          [network.chainId]: cpkAddresses,
+        }
       : {}
     const cpk = await CPK.create({
       ethLibAdapter: new EthersAdapter({
@@ -670,15 +670,13 @@ class CPKService {
   ) => {
     const transactions = []
 
-    // const network = await this.provider.getNetwork()
-    // const networkId = network.chainId
-
     const minDepositAmount = await gelato.minimumTokenAmount(collateralToken.address, collateralToken.decimals)
     const depositAmount = Number(ethers.utils.formatUnits(collateralAmount, collateralToken.decimals))
 
     if (minDepositAmount > depositAmount) {
       throw Error(
-        `To use Gelato's auto-withdraw service, you must deposit at least ${minDepositAmount.toFixed(5)} ${collateralToken.symbol
+        `To use Gelato's auto-withdraw service, you must deposit at least ${minDepositAmount.toFixed(5)} ${
+          collateralToken.symbol
         }`,
       )
     }

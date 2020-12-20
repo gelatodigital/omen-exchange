@@ -17,10 +17,6 @@ const Wrapper = styled.div<{ noMarginBottom: boolean }>`
   ${props => (props.noMarginBottom ? 'margin-bottom: 0;' : 'margin-bottom: 24px')};
 `
 
-// const GridTransactionDetailsStyled = styled(GridTransactionDetails)<{ noMarginTop: boolean }>`
-//   ${props => (props.noMarginTop ? 'margin-top: 0;' : '')};
-// `
-
 const Title = styled.h2`
   color: ${props => props.theme.colors.textColorDarker};
   font-size: 16px;
@@ -112,7 +108,6 @@ const ButtonCircleStyled = styled(ButtonCircle)<{ disabled?: boolean }>`
   }
   margin-right: 5px;
 `
-// ${props => props.theme.colors.secondary}
 const ButtonCircleStyledFilled = styled(ButtonCircle)`
   svg {
     fill: 'white';
@@ -120,9 +115,6 @@ const ButtonCircleStyledFilled = styled(ButtonCircle)`
   background-color: #7986cb;
   margin-right: 5px;
 `
-
-// filter: invert(100%)
-// vertical-align: middle;
 const IconStyled = styled.div<{ color?: string }>`
   line-height: 1;
   svg {
@@ -189,23 +181,13 @@ export const GelatoScheduler: React.FC<GelatoSchedulerProps> = (props: GelatoSch
   )
 
   const toggleActive = () => {
-    if (active) {
-      // deactivate
-      const newGelatoCondition = {
-        ...gelatoData,
-      }
-      newGelatoCondition.shouldSubmit = false
-      handleGelatoDataChange(newGelatoCondition)
-      setActive(false)
-    } else {
-      // activate
-      const newGelatoCondition = {
-        ...gelatoData,
-      }
-      newGelatoCondition.shouldSubmit = true
-      handleGelatoDataChange(newGelatoCondition)
-      setActive(true)
+    const newGelatoCondition = {
+      ...gelatoData,
     }
+    const isTrue = active ? false : true
+    newGelatoCondition.shouldSubmit = isTrue
+    handleGelatoDataChange(newGelatoCondition)
+    setActive(isTrue)
   }
 
   const toggleCustomizable = () => {
@@ -284,7 +266,7 @@ export const GelatoScheduler: React.FC<GelatoSchedulerProps> = (props: GelatoSch
           <IconGelato />
         </GelatoIconCircle>
         {!isScheduled && (
-          <React.Fragment>
+          <>
             <TitleAndDescription alignItemsEnd={false}>
               <Description style={{ fontWeight: 500 }} textAlignRight={false}>
                 Gelato
@@ -321,7 +303,7 @@ export const GelatoScheduler: React.FC<GelatoSchedulerProps> = (props: GelatoSch
                 </IconStyled>
               </ButtonCircleStyledFilled>
             )}
-          </React.Fragment>
+          </>
         )}
         {isScheduled && taskStatus && (
           <div style={{ display: 'flex', justifyContent: 'space-between', flexDirection: 'row', width: '100%' }}>
