@@ -8,6 +8,7 @@ import {
   DEFAULT_TOKEN_ADDRESS,
   DEFAULT_TOKEN_ADDRESS_RINKEBY,
   DOCUMENT_FAQ,
+  GELATO_ACTIVATED,
   MAX_MARKET_FEE,
 } from '../../../../../../common/constants'
 import {
@@ -462,14 +463,16 @@ const FundingAndFeeStep: React.FC<Props> = (props: Props) => {
             hyperlinkDescription={''}
           />
         )}
-        <GelatoScheduler
-          gelatoData={values.gelatoData}
-          handleGelatoDataChange={handleGelatoDataChange}
-          handleGelatoDataInputsChange={handleGelatoDataInputsChange}
-          isScheduled={false}
-          noMarginBottom={false}
-          resolution={values.resolution !== null ? values.resolution : new Date()}
-        />
+        {GELATO_ACTIVATED && (
+          <GelatoScheduler
+            gelatoData={values.gelatoData}
+            handleGelatoDataChange={handleGelatoDataChange}
+            handleGelatoDataInputsChange={handleGelatoDataInputsChange}
+            isScheduled={false}
+            noMarginBottom={false}
+            resolution={values.resolution !== null ? values.resolution : new Date()}
+          />
+        )}
         {showSetAllowance && (
           <SetAllowance
             collateral={collateral}

@@ -4,7 +4,7 @@ import React, { useEffect, useMemo, useState } from 'react'
 import { RouteComponentProps, useHistory, withRouter } from 'react-router-dom'
 import styled from 'styled-components'
 
-import { DOCUMENT_FAQ } from '../../../../common/constants'
+import { DOCUMENT_FAQ, GELATO_ACTIVATED } from '../../../../common/constants'
 import {
   useCollateralBalance,
   useConnectedCPKContext,
@@ -640,21 +640,23 @@ const MarketPoolLiquidityWrapper: React.FC<Props> = (props: Props) => {
           hyperlinkDescription=""
         />
       )}
-      <GelatoScheduler
-        collateralSymbol={collateral.symbol}
-        collateralToWithdraw={`${formatBigNumber(maxCollateralReturnAmount(fundingBalance), collateral.decimals)}`}
-        etherscanLink={etherscanLink ? etherscanLink : undefined}
-        gelatoData={gelatoData}
-        handleGelatoDataChange={setGelatoData}
-        handleGelatoDataInputsChange={(newDate: Date | null) => {
-          const gelatoDataCopy = { ...gelatoData, inputs: newDate }
-          setGelatoData(gelatoDataCopy)
-        }}
-        isScheduled={submittedTaskReceiptWrapper ? true : false}
-        noMarginBottom={false}
-        resolution={resolutionDate !== null ? marketMakerData.question.resolution : new Date()}
-        taskStatus={submittedTaskReceiptWrapper ? submittedTaskReceiptWrapper.status : undefined}
-      />
+      {GELATO_ACTIVATED && (
+        <GelatoScheduler
+          collateralSymbol={collateral.symbol}
+          collateralToWithdraw={`${formatBigNumber(maxCollateralReturnAmount(fundingBalance), collateral.decimals)}`}
+          etherscanLink={etherscanLink ? etherscanLink : undefined}
+          gelatoData={gelatoData}
+          handleGelatoDataChange={setGelatoData}
+          handleGelatoDataInputsChange={(newDate: Date | null) => {
+            const gelatoDataCopy = { ...gelatoData, inputs: newDate }
+            setGelatoData(gelatoDataCopy)
+          }}
+          isScheduled={submittedTaskReceiptWrapper ? true : false}
+          noMarginBottom={false}
+          resolution={resolutionDate !== null ? marketMakerData.question.resolution : new Date()}
+          taskStatus={submittedTaskReceiptWrapper ? submittedTaskReceiptWrapper.status : undefined}
+        />
+      )}
       <BottomButtonWrapper borderTop>
         <Button buttonType={ButtonType.secondaryLine} onClick={() => history.goBack()}>
           Cancel
