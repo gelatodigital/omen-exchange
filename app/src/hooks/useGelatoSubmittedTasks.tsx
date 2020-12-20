@@ -3,13 +3,10 @@ import { utils } from 'ethers'
 import { useEffect, useState } from 'react'
 
 import { GelatoSubmitted } from '../queries/gelato'
-import { getLogger } from '../util/logger'
 import { Status, TaskReceiptWrapper } from '../util/types'
 
 import { ConnectedWeb3Context } from './connectedWeb3'
 import { useContracts } from './useContracts'
-
-const logger = getLogger('useGelatoSubmittedTasks')
 
 const getEtherscanPrefix = (networkId: number) => {
   switch (networkId) {
@@ -32,72 +29,58 @@ export const useGelatoSubmittedTasks = (
   const { networkId } = context
   const { gelato } = useContracts(context)
 
-  const [submittedTaskReceiptWrapper, setSubmittedTaskReceiptWrapper] = useState<TaskReceiptWrapper | null>(null)
+  const [submittedTaskReceiptWrappers, setSubmittedTaskReceiptWrappers] = useState<TaskReceiptWrapper[]>([])
   const [withdrawDate, setWithdrawDate] = useState<Date | null>(null)
   const [etherscanLink, setEtherscanLink] = useState<string | null>(null)
-  const [needUpdate, setNeedUpdate] = useState<boolean>(false)
-  const [taskLength, setTaskLength] = useState<number>(0)
 
-  const { data: GelatoSubmittedData, error } = useQuery(GelatoSubmitted, {
+  const { data, error } = useQuery(GelatoSubmitted, {
     notifyOnNetworkStatusChange: true,
     variables: { user: cpkAddress != null ? cpkAddress.toLowerCase() : null },
   })
 
-  const storeGelatoDataInState = async () => {
-    if (cpkAddress) {
-      const taskReceiptWrappers = GelatoSubmittedData.taskReceiptWrappers as TaskReceiptWrapper[]
-      // For every TaskReceipt
-      const wrappers = [] as TaskReceiptWrapper[]
-      for (const wrapper of taskReceiptWrappers) {
-        const taskData: string = wrapper.taskReceipt.tasks[0].actions[0].data
-        const decodedData = await gelato.decodeSubmitTimeBasedWithdrawalTask(taskData)
-        const dedcodedMarketMakerAddress = decodedData[1]
-        if (utils.getAddress(dedcodedMarketMakerAddress) === utils.getAddress(marketMakerAddress)) {
-          wrappers.push(wrapper)
-        }
-      }
+  const dataLength = data ? data.length : 0
 
-      // Return the last task receipt
-      if (wrappers.length > 0) {
-        const lastWrapper = wrappers[wrappers.length - 1]
-        setSubmittedTaskReceiptWrapper(lastWrapper)
-        const timestamp = await gelato.decodeTimeConditionData(lastWrapper.taskReceipt.tasks[0].conditions[0].data)
-        const date = new Date(parseInt(timestamp) * 1000)
-        setWithdrawDate(date)
-
-        if (lastWrapper.status === 'execSuccess') {
-          const link = `https://${getEtherscanPrefix(networkId)}etherscan.io/tx/${lastWrapper.executionHash}`
-          setEtherscanLink(link)
-        }
-      }
-      setNeedUpdate(false)
-    }
-  }
-
-  if (
-    GelatoSubmittedData &&
-    GelatoSubmittedData.taskReceiptWrappers &&
-    GelatoSubmittedData.taskReceiptWrappers.length > 0
-  ) {
-    if (needUpdate) {
-      try {
-        storeGelatoDataInState()
-      } catch (err) {
-        logger.log(err.message)
-      }
-    } else {
-      if (taskLength != GelatoSubmittedData.taskReceiptWrappers.length) {
-        setTaskLength(GelatoSubmittedData.taskReceiptWrappers.length)
-      }
-    }
+  const getLastTask = (): TaskReceiptWrapper => {
+    return submittedTaskReceiptWrappers[submittedTaskReceiptWrappers.length - 1]
   }
 
   useEffect(() => {
-    setNeedUpdate(true)
-  }, [cpkAddress, taskLength])
+    const storeGelatoDataInState = async () => {
+      if (cpkAddress && data) {
+        const taskReceiptWrappers = data.taskReceiptWrappers as TaskReceiptWrapper[]
+        // For every TaskReceipt
+        const wrappers = [] as TaskReceiptWrapper[]
+        for (const wrapper of taskReceiptWrappers) {
+          const taskData: string = wrapper.taskReceipt.tasks[0].actions[0].data
+          const decodedData = await gelato.decodeSubmitTimeBasedWithdrawalTask(taskData)
+          const dedcodedMarketMakerAddress = decodedData[1]
+          if (utils.getAddress(dedcodedMarketMakerAddress) === utils.getAddress(marketMakerAddress)) {
+            wrappers.push(wrapper)
+          }
+        }
+
+        setSubmittedTaskReceiptWrappers(wrappers)
+
+        // Return the last task receipt
+        if (wrappers.length > 0) {
+          const lastWrapper = wrappers[wrappers.length - 1]
+          const timestamp = await gelato.decodeTimeConditionData(lastWrapper.taskReceipt.tasks[0].conditions[0].data)
+          const date = new Date(parseInt(timestamp) * 1000)
+          setWithdrawDate(date)
+
+          if (lastWrapper.status === 'execSuccess') {
+            const link = `https://${getEtherscanPrefix(networkId)}etherscan.io/tx/${lastWrapper.executionHash}`
+            setEtherscanLink(link)
+          }
+        }
+      }
+    }
+    storeGelatoDataInState()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [cpkAddress, submittedTaskReceiptWrappers.length, dataLength, networkId])
 
   return {
-    submittedTaskReceiptWrapper,
+    submittedTaskReceiptWrapper: submittedTaskReceiptWrappers.length > 0 ? getLastTask() : null,
     etherscanLink,
     withdrawDate,
     status: error ? Status.Error : Status.Ready,

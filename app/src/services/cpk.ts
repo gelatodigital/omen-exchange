@@ -482,17 +482,18 @@ class CPKService {
         data: MarketMakerService.encodeAddFunding(amount),
       })
 
-      // Gelato stuff
-      const outcomesSlotCount = await conditionalTokens.getOutcomeSlotCount(conditionId)
-      const outcomeSlotCountInt = parseInt(outcomesSlotCount.toString())
-
-      // Submit Gelato Task if selection is enabled and no other task was => Assuming only one task can be submitted for each market
+      // Submit Gelato Task if selection is enabled and no other task was submitted beforehand
+      // @dev => Assuming only one task can be submitted for each market
       if (
         (gelatoData.shouldSubmit && !submittedTaskReceiptWrapper) ||
         (gelatoData.shouldSubmit &&
           submittedTaskReceiptWrapper &&
           submittedTaskReceiptWrapper.status !== 'awaitingExec')
       ) {
+        const outcomesSlotCount = await conditionalTokens.getOutcomeSlotCount(conditionId)
+        const outcomeSlotCountInt = parseInt(outcomesSlotCount.toString())
+
+        // Step 5: Submit Auto-Withdraw Task to Gelato
         const gelatoTransactions = await this.addGelatoSubmitTransaction(
           amount,
           gelatoData,
@@ -552,6 +553,7 @@ class CPKService {
 
       // If Gelato task is still active
       if (taskReceiptWrapper && taskReceiptWrapper.status === 'awaitingExec') {
+        // Cancel Gelato Task when withdrawing
         const cancelTaskData = gelato.encodeCancelTask(taskReceiptWrapper.taskReceipt)
         transactions.push({
           to: gelato.addresses.gelatoCore,
@@ -667,6 +669,7 @@ class CPKService {
     account: string,
   ) => {
     const transactions = []
+
     const minDepositAmount = await gelato.minimumTokenAmount(collateralToken.address, collateralToken.decimals)
     const depositAmount = Number(ethers.utils.formatUnits(collateralAmount, collateralToken.decimals))
 
