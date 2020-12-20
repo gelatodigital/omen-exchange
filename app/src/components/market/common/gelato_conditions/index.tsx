@@ -42,7 +42,7 @@ export const GelatoConditions = (props: Props) => {
       currentItem={currentItem}
       disabled={disabled}
       dropdownDirection={DropdownDirection.upwards}
-      dropdownPosition={DropdownPosition.right}
+      dropdownPosition={DropdownPosition.left}
       items={conditionOptions}
     />
   )

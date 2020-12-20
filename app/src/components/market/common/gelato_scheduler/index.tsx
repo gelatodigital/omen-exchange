@@ -26,95 +26,67 @@ const Title = styled.h2`
   font-weight: 400;
 `
 
-const DescriptionWrapper = styled.div<{ isRow: boolean }>`
-  align-items: center;
-  border-radius: 4px;
-  border: 1px solid ${props => props.theme.borders.borderDisabled};
-  padding: 21px 25px;
+const Box = styled.div<{ boxType: string; isRow?: boolean }>`
+  display: flex;
   flex-direction: ${props => (props.isRow ? 'row' : 'column')};
-  display: flex;
-  align-items: stretch;
+  ${props =>
+    props.boxType == 'outer'
+      ? `align-items: stretch;
+        border-radius: 4px;
+        padding: 21px 25px;
+        border: 1px solid ${props.theme.borders.borderDisabled};`
+      : ''}
+  ${props =>
+    props.boxType == 'title'
+      ? `align-items: flex-start;
+        margin-left: 8px;
+        flex-wrap: nowrap;`
+      : ''}
+  ${props =>
+    props.boxType == 'subtitle'
+      ? `align-items: flex-end;
+        justify-content: center;
+        margin-left: 8px;
+        flex-wrap: nowrap;`
+      : ''}
+  ${props =>
+    props.boxType == 'condition'
+      ? `align-items: flex-end;
+        margin-bottom: 4px;
+        justify-content: space-between;`
+      : ''}
 `
 
-const Description = styled.p<{ textAlignRight: boolean }>`
-  color: ${props => props.theme.colors.textColorLightish};
+const Description = styled.p<{ descriptionType: string; textAlignRight?: boolean }>`
+  color: ${props => (props.descriptionType == 'task' ? props.color : props.theme.colors.textColorLightish)};
   font-size: 14px;
   letter-spacing: 0.2px;
   line-height: 1.4;
-  margin: 0 25px 0 0;
-  text-align: ${props => (props.textAlignRight ? 'right' : 'left')};
-  vertical-align: middle;
-  display: inline-block;
+  ${props =>
+    props.descriptionType == 'standard'
+      ? 'margin: 0 25px 0 0;'
+      : props.descriptionType == 'task'
+      ? 'margin: 0 4px 0 0;'
+      : props.descriptionType == 'mini'
+      ? 'margin: 2px 0 0 0;'
+      : ''}
+  ${props =>
+    props.descriptionType == 'condition' ? '' : props.textAlignRight ? 'text-align: right;' : 'text-align: left;'}
+  ${props => (props.descriptionType == 'condition' ? '' : 'vertical-align: middle;\ndisplay: inline-block;')}
 `
 
-const SubDescription = styled.p<{ textAlignRight: boolean }>`
-  color: ${props => props.theme.colors.textColorLightish};
-  font-size: 14px;
-  letter-spacing: 0.2px;
-  line-height: 1.4;
-  margin: 2px 0 0 0;
-  text-align: ${props => (props.textAlignRight ? 'right' : 'left')};
-  vertical-align: middle;
-  display: inline-block;
-`
-
-const TaskStatusBox = styled.div`
-  display: flex;
-  align-items: start;
-  flex-direction: row;
-`
-
-const TaskStatus = styled.p<{ color: string }>`
-  color: ${props => props.color};
-  font-size: 14px;
-  fontWeight: 500
-  letter-spacing: 0.2px;
-  line-height: 1.4;
-  margin: 0 4px 0 0;
-  text-align: right;
-  vertical-align: middle;
-  display: inline-block;
-`
-
-const ConditionDetails = styled.p`
-  color: ${props => props.theme.colors.textColorLightish};
-  font-size: 14px;
-  letter-spacing: 0.2px;
-  line-height: 1.4;
-`
-
-const TitleAndDescription = styled.div<{ alignItemsEnd: boolean }>`
-  margin-left: 8px;
-  display: flex;
-  flex-direction: column;
-  flex-wrap: nowrap;
-  align-items: ${props => (props.alignItemsEnd ? 'flex-end' : 'flex-start')};
-  justify-content: center;
-`
-
-const ServiceDetails = styled.div`
-  display: flex;
-  flex-direction: row;
-  justify-content: space-between;
-  margin-bottom: 8px;
-`
-
-const ButtonCircleStyled = styled(ButtonCircle)<{ disabled?: boolean }>`
+const ButtonCircleStyled = styled(ButtonCircle)<{ disabled?: boolean; filled?: boolean }>`
   svg {
     filter: ${props =>
       props.disabled
         ? 'invert(46%) sepia(0%) saturate(1168%) hue-rotate(183deg) brightness(99%) contrast(89%)'
         : 'none'};
+    ${props => (props.filled ? 'fill: white;' : '')}
   }
+  ${props => (props.filled ? 'background-color: #7986cb;' : '')}
   margin-right: 5px;
 `
-const ButtonCircleStyledFilled = styled(ButtonCircle)`
-  svg {
-    fill: 'white';
-  }
-  background-color: #7986cb;
-  margin-right: 5px;
-`
+
 const IconStyled = styled.div<{ color?: string }>`
   line-height: 1;
   svg {
@@ -221,39 +193,39 @@ export const GelatoScheduler: React.FC<GelatoSchedulerProps> = (props: GelatoSch
     switch (status) {
       case 'awaitingExec':
         return (
-          <TaskStatusBox>
-            <TaskStatus color="green">{`scheduled in ${displayText}`}</TaskStatus>
+          <Box boxType={'task'} isRow={true}>
+            <Description color="green" descriptionType={'task'}>{`scheduled in ${displayText}`}</Description>
             <IconStyled color={'green'}>
               <IconClock></IconClock>
             </IconStyled>
-          </TaskStatusBox>
+          </Box>
         )
       case 'execSuccess':
         return (
-          <TaskStatusBox>
-            <TaskStatus color="green">{`successful`}</TaskStatus>
+          <Box boxType={'task'} isRow={true}>
+            <Description color="green" descriptionType={'task'}>{`successful`}</Description>
             <IconStyled color={'green'}>
               <IconCheckmarkFilled></IconCheckmarkFilled>
             </IconStyled>
-          </TaskStatusBox>
+          </Box>
         )
       case 'execReverted':
         return (
-          <TaskStatusBox>
-            <TaskStatus color="red">{`failed`}</TaskStatus>
+          <Box boxType={'task'} isRow={true}>
+            <Description color="red" descriptionType={'task'}>{`failed`}</Description>
             <IconStyled color={'red'}>
               <IconAlert></IconAlert>
             </IconStyled>
-          </TaskStatusBox>
+          </Box>
         )
       case 'canceled':
         return (
-          <TaskStatusBox>
-            <TaskStatus color="red">{`canceled`}</TaskStatus>
+          <Box boxType={'task'} isRow={true}>
+            <Description color="red" descriptionType={'task'}>{`canceled`}</Description>
             <IconStyled color={'red'}>
               <IconAlert></IconAlert>
             </IconStyled>
-          </TaskStatusBox>
+          </Box>
         )
     }
   }
@@ -261,24 +233,26 @@ export const GelatoScheduler: React.FC<GelatoSchedulerProps> = (props: GelatoSch
   return (
     <Wrapper noMarginBottom={noMarginBottom} {...restProps}>
       <Title>Recommended Services</Title>
-      <DescriptionWrapper isRow={true}>
+      <Box boxType={'outer'} isRow={true}>
         <GelatoIconCircle>
           <IconGelato />
         </GelatoIconCircle>
         {!isScheduled && (
           <>
-            <TitleAndDescription alignItemsEnd={false}>
-              <Description style={{ fontWeight: 500 }} textAlignRight={false}>
+            <Box boxType={'title'} isRow={false}>
+              <Description descriptionType={'standard'} style={{ fontWeight: 500 }} textAlignRight={false}>
                 Gelato
               </Description>
               <Description
+                descriptionType={'standard'}
                 textAlignRight={false}
               >{`Automatically withdraw liquidity ${daysBeforeWithdraw} days before market ends`}</Description>
-            </TitleAndDescription>
+            </Box>
 
             <ButtonCircleStyled
               active={active ? true : false}
               disabled={active ? false : true}
+              filled={false}
               onClick={toggleCustomizable}
             >
               <IconFilter />
@@ -288,6 +262,7 @@ export const GelatoScheduler: React.FC<GelatoSchedulerProps> = (props: GelatoSch
               <ButtonCircleStyled
                 active={true}
                 disabled={false}
+                filled={false}
                 onClick={toggleActive}
                 style={{ backgroundColor: 'white' }}
               >
@@ -297,52 +272,54 @@ export const GelatoScheduler: React.FC<GelatoSchedulerProps> = (props: GelatoSch
               </ButtonCircleStyled>
             )}
             {active && (
-              <ButtonCircleStyledFilled onClick={toggleActive}>
+              <ButtonCircleStyled filled={true} onClick={toggleActive}>
                 <IconStyled color={'white'}>
                   <IconCheckmark />
                 </IconStyled>
-              </ButtonCircleStyledFilled>
+              </ButtonCircleStyled>
             )}
           </>
         )}
         {isScheduled && taskStatus && (
           <div style={{ display: 'flex', justifyContent: 'space-between', flexDirection: 'row', width: '100%' }}>
-            <TitleAndDescription alignItemsEnd={false}>
-              <Description textAlignRight={false}>{`Auto-Withdraw ${
+            <Box boxType={'title'} isRow={false}>
+              <Description descriptionType={'standard'} textAlignRight={false}>{`Auto-Withdraw ${
                 taskStatus === 'execSuccess' ? '' : `${collateralToWithdraw} ${collateralSymbol}`
               }`}</Description>
-              <SubDescription textAlignRight={false}>{`Powered by Gelato Network`}</SubDescription>
-            </TitleAndDescription>
+              <Description descriptionType={'mini'} textAlignRight={false}>{`Powered by Gelato Network`}</Description>
+            </Box>
 
-            <TitleAndDescription alignItemsEnd={true}>
+            <Box boxType={'subtitle'} isRow={false}>
               {getTaskStatus(taskStatus, gelatoData.inputs)}
 
-              <SubDescription textAlignRight={true}>{`${formatDate(gelatoData.inputs)}`}</SubDescription>
-            </TitleAndDescription>
+              <Description descriptionType={'mini'} textAlignRight={true}>
+                {`${formatDate(gelatoData.inputs)}`}
+              </Description>
+            </Box>
           </div>
         )}
-      </DescriptionWrapper>
+      </Box>
       {taskStatus === 'awaitingExec' && (
-        <DescriptionWrapper isRow={false}>
-          <Description textAlignRight={false}>
+        <Box boxType={'outer'} isRow={false}>
+          <Description descriptionType={'standard'} textAlignRight={false}>
             {`Gelato will automatically withdraw your liquidity of ${collateralToWithdraw} ${collateralSymbol} on ${formatDate(
               gelatoData.inputs,
             )} (with a network fee deducted from withdrawn ${collateralSymbol}). Cancel the auto-withdraw by manually withdrawing your liquidity.`}
           </Description>
-        </DescriptionWrapper>
+        </Box>
       )}
       {taskStatus === 'execReverted' && (
-        <DescriptionWrapper isRow={false}>
-          <Description textAlignRight={false}>
+        <Box boxType={'outer'} isRow={false}>
+          <Description descriptionType={'standard'} textAlignRight={false}>
             {`Your provided liquidity was insufficient on ${formatDate(
               gelatoData.inputs,
             )} to pay for for the withdrawal transaction.`}
           </Description>
-        </DescriptionWrapper>
+        </Box>
       )}
       {taskStatus === 'execSuccess' && (
-        <DescriptionWrapper isRow={false}>
-          <Description textAlignRight={false}>
+        <Box boxType={'outer'} isRow={false}>
+          <Description descriptionType={'standard'} textAlignRight={false}>
             {`Your provided liquidity was successfully withdrawn on ${formatDate(
               gelatoData.inputs,
             )}. Check out the transaction `}
@@ -353,12 +330,12 @@ export const GelatoScheduler: React.FC<GelatoSchedulerProps> = (props: GelatoSch
             </span>
             {'.'}
           </Description>
-        </DescriptionWrapper>
+        </Box>
       )}
       {customizable && (
-        <DescriptionWrapper isRow={false}>
-          <ServiceDetails>
-            <ConditionDetails>Withdraw Condition</ConditionDetails>
+        <Box boxType={'outer'} isRow={false}>
+          <Box boxType={'condition'} isRow={true}>
+            <Description descriptionType={'condition'}>Withdraw Condition</Description>
             <FormRow
               formField={
                 <GelatoConditions
@@ -368,9 +345,9 @@ export const GelatoScheduler: React.FC<GelatoSchedulerProps> = (props: GelatoSch
                 />
               }
             />
-          </ServiceDetails>
-          <ServiceDetails>
-            <ConditionDetails>Withdraw Date and Time</ConditionDetails>
+          </Box>
+          <Box boxType={'condition'} isRow={true}>
+            <Description descriptionType={'condition'}>Withdraw Date and Time</Description>
             <FormRow
               formField={
                 <DateField
@@ -383,13 +360,13 @@ export const GelatoScheduler: React.FC<GelatoSchedulerProps> = (props: GelatoSch
                 />
               }
             />
-          </ServiceDetails>
-          <Description textAlignRight={false}>
-            {`Gelato will automatically withdraw your liquidity ${daysBeforeWithdraw} day(s) before the market will close on ${formatDate(
-              gelatoData.inputs,
-            )}`}
+          </Box>
+          <Description descriptionType={'standard'} textAlignRight={false}>
+            {`Gelato will automatically withdraw your liquidity ${daysBeforeWithdraw} day(s) before the market will close on 
+              ${formatDate(gelatoData.inputs)}
+            `}
           </Description>
-        </DescriptionWrapper>
+        </Box>
       )}
     </Wrapper>
   )
