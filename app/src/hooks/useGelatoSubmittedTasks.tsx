@@ -1,9 +1,10 @@
 import { useQuery } from '@apollo/react-hooks'
+import { TaskReceiptWrapper } from '@gelatonetwork/core'
 import { utils } from 'ethers'
 import { useEffect, useState } from 'react'
 
 import { GelatoSubmitted } from '../queries/gelato'
-import { Status, TaskReceiptWrapper } from '../util/types'
+import { Status /*TaskReceiptWrapper*/ } from '../util/types'
 
 import { ConnectedWeb3Context } from './connectedWeb3'
 import { useContracts } from './useContracts'

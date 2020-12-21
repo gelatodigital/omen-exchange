@@ -1,3 +1,4 @@
+import { TaskReceiptWrapper } from '@gelatonetwork/core'
 import { txs } from '@gnosis.pm/safe-apps-sdk/dist/txs'
 import CPK from 'contract-proxy-kit/lib/esm'
 import EthersAdapter from 'contract-proxy-kit/lib/esm/ethLibAdapters/EthersAdapter'
@@ -9,7 +10,7 @@ import moment from 'moment'
 import { getLogger } from '../util/logger'
 import { getCPKAddresses, getContractAddress } from '../util/networks'
 import { calcDistributionHint, waitABit } from '../util/tools'
-import { GelatoData, MarketData, Question, TaskReceiptWrapper, Token } from '../util/types'
+import { GelatoData, MarketData, Question, /*TaskReceiptWrapper, */ Token } from '../util/types'
 
 import { ConditionalTokenService } from './conditional_token'
 import { ERC20Service } from './erc20'
