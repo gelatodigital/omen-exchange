@@ -180,8 +180,6 @@ class GelatoService {
       taskData.receiver,
     ])
 
-    const testCondition = new GelatoCondition({})
-
     const action = new GelatoAction({
       addr: this.addresses.actionWithdrawLiquidity,
       data: actionWithdrawLiquidityData,
