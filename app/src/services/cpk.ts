@@ -3,7 +3,7 @@ import CPK from 'contract-proxy-kit/lib/esm'
 import EthersAdapter from 'contract-proxy-kit/lib/esm/ethLibAdapters/EthersAdapter'
 import { ethers } from 'ethers'
 import { TransactionReceipt, Web3Provider } from 'ethers/providers'
-import { BigNumber } from 'ethers/utils'
+import { BigNumber, bigNumberify } from 'ethers/utils'
 import moment from 'moment'
 
 import { getLogger } from '../util/logger'
@@ -45,6 +45,7 @@ interface CPKCreateMarketParams {
 
 interface CPKAddFundingParams {
   amount: BigNumber
+  priorCollateralAmount: BigNumber
   collateral: Token
   marketMaker: MarketMakerService
   gelato: GelatoService
@@ -347,6 +348,7 @@ class CPKService {
       if (gelatoData.shouldSubmit) {
         const gelatoTransactions = await this.addGelatoSubmitTransaction(
           marketData.funding,
+          bigNumberify(0), // no prior funding, new market
           gelatoData,
           gelato,
           outcomes.length,
@@ -438,6 +440,7 @@ class CPKService {
     gelato,
     gelatoData,
     marketMaker,
+    priorCollateralAmount,
     submittedTaskReceiptWrapper,
   }: CPKAddFundingParams): Promise<TransactionReceipt> => {
     try {
@@ -496,6 +499,7 @@ class CPKService {
         // Step 5: Submit Auto-Withdraw Task to Gelato
         const gelatoTransactions = await this.addGelatoSubmitTransaction(
           amount,
+          priorCollateralAmount,
           gelatoData,
           gelato,
           outcomeSlotCountInt,
@@ -659,6 +663,7 @@ class CPKService {
 
   addGelatoSubmitTransaction = async (
     collateralAmount: BigNumber,
+    priorCollateralAmount: BigNumber,
     gelatoData: GelatoData,
     gelato: GelatoService,
     outcomeCount: number,
@@ -672,12 +677,13 @@ class CPKService {
 
     const minDepositAmount = await gelato.minimumTokenAmount(collateralToken.address, collateralToken.decimals)
     const depositAmount = Number(ethers.utils.formatUnits(collateralAmount, collateralToken.decimals))
+    const priorDepositAmount = Number(ethers.utils.formatUnits(priorCollateralAmount, collateralToken.decimals))
 
-    if (minDepositAmount > depositAmount) {
+    if (minDepositAmount > depositAmount + priorDepositAmount) {
       throw Error(
-        `To use Gelato's auto-withdraw service, you must deposit at least ${minDepositAmount.toFixed(5)} ${
-          collateralToken.symbol
-        }`,
+        `To use Gelato's auto-withdraw service, you must deposit at least ${(
+          minDepositAmount - priorDepositAmount
+        ).toFixed(5)} ${collateralToken.symbol}`,
       )
     }
 

@@ -295,6 +295,7 @@ const MarketPoolLiquidityWrapper: React.FC<Props> = (props: Props) => {
 
       await cpk.addFunding({
         amount: amountToFund || Zero,
+        priorCollateralAmount: totalUserLiquidity,
         collateral,
         marketMaker,
         gelato,
