@@ -1,6 +1,6 @@
 import { Zero } from 'ethers/constants'
 import { BigNumber } from 'ethers/utils'
-import React, { useEffect, useMemo, useState } from 'react'
+import React, { useCallback, useEffect, useMemo, useState } from 'react'
 import { RouteComponentProps, useHistory, withRouter } from 'react-router-dom'
 import styled from 'styled-components'
 
@@ -194,6 +194,8 @@ const MarketPoolLiquidityWrapper: React.FC<Props> = (props: Props) => {
 
   const defaultGelatoData = getDefaultGelatoData(networkId)
   const [gelatoData, setGelatoData] = useState<GelatoData>(defaultGelatoData)
+  const [belowGelatoMinimum, setBelowGelatoMinimum] = useState(false)
+  const [gelatoMinimum, setGelatoMinimum] = useState<number>(0)
 
   const poolTokens = calcPoolTokens(
     amountToFund || Zero,
@@ -258,6 +260,23 @@ const MarketPoolLiquidityWrapper: React.FC<Props> = (props: Props) => {
 
   const totalUserLiquidity = totalDepositedTokens.add(userEarnings)
 
+  const checkGelatoMinimum = useCallback(async () => {
+    if (cpk && amountToFund) {
+      const { belowMinimum, minimum } = await cpk.isBelowGelatoMinimum(
+        amountToFund,
+        collateral,
+        gelato,
+        totalUserLiquidity,
+      )
+      setBelowGelatoMinimum(belowMinimum)
+      setGelatoMinimum(minimum)
+    }
+  }, [cpk, collateral, amountToFund, totalUserLiquidity, gelato])
+
+  useEffect(() => {
+    checkGelatoMinimum()
+  }, [checkGelatoMinimum])
+
   const addFunding = async () => {
     setModalTitle('Funds Deposit')
 
@@ -275,7 +294,7 @@ const MarketPoolLiquidityWrapper: React.FC<Props> = (props: Props) => {
       const fundsAmount = formatBigNumber(amountToFund || Zero, collateral.decimals)
 
       setStatus(Status.Loading)
-      withGelato
+      withGelato && !belowGelatoMinimum
         ? setMessage(
             `Depositing funds: ${fundsAmount} ${collateral.symbol}\n
            and scheduling future auto-withdraw ${collateral.symbol} via Gelato Network`,
@@ -312,14 +331,12 @@ const MarketPoolLiquidityWrapper: React.FC<Props> = (props: Props) => {
       setStatus(Status.Ready)
       setAmountToFund(null)
       setAmountToFundDisplay('')
-      withGelato
+      withGelato && !belowGelatoMinimum
         ? setMessage(`Successfully deposited ${fundsAmount} ${collateral.symbol}\n and scheduled auto-withdraw`)
         : setMessage(`Successfully deposited ${fundsAmount} ${collateral.symbol}`)
     } catch (err) {
       setStatus(Status.Error)
-      err.message.includes('Gelato')
-        ? setMessage(`Error trying to deposit funds. (${err.message})`)
-        : setMessage(`Error trying to deposit funds.`)
+      setMessage(`Error trying to deposit funds.`)
       logger.error(`${message} - ${err.message}`)
     }
     setIsModalTransactionResultOpen(true)
@@ -643,6 +660,7 @@ const MarketPoolLiquidityWrapper: React.FC<Props> = (props: Props) => {
       )}
       {GELATO_ACTIVATED && (
         <GelatoScheduler
+          belowMinimum={belowGelatoMinimum}
           collateralSymbol={collateral.symbol}
           collateralToWithdraw={`${formatBigNumber(maxCollateralReturnAmount(fundingBalance), collateral.decimals)}`}
           etherscanLink={etherscanLink ? etherscanLink : undefined}
@@ -653,6 +671,7 @@ const MarketPoolLiquidityWrapper: React.FC<Props> = (props: Props) => {
             setGelatoData(gelatoDataCopy)
           }}
           isScheduled={submittedTaskReceiptWrapper ? true : false}
+          minimum={gelatoMinimum}
           noMarginBottom={false}
           resolution={resolutionDate !== null ? marketMakerData.question.resolution : new Date()}
           taskStatus={submittedTaskReceiptWrapper ? submittedTaskReceiptWrapper.status : undefined}

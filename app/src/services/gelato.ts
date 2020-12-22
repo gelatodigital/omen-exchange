@@ -260,6 +260,7 @@ class GelatoService {
       throw new Error(`error finding price via uniswap`)
     }
   }
+
   /**
    * Returns Uniswap price of collateral to DAI
    */

@@ -5,7 +5,7 @@ import EthersAdapter from 'contract-proxy-kit/lib/esm/ethLibAdapters/EthersAdapt
 import { ethers } from 'ethers'
 import { Zero } from 'ethers/constants'
 import { TransactionReceipt, Web3Provider } from 'ethers/providers'
-import { BigNumber } from 'ethers/utils'
+import { BigNumber, bigNumberify } from 'ethers/utils'
 import moment from 'moment'
 
 import { getLogger } from '../util/logger'
@@ -677,16 +677,16 @@ class CPKService {
   ) => {
     const transactions = []
 
-    const minDepositAmount = await gelato.minimumTokenAmount(collateralToken.address, collateralToken.decimals)
-    const depositAmount = Number(ethers.utils.formatUnits(collateralAmount, collateralToken.decimals))
-    const priorDepositAmount = Number(ethers.utils.formatUnits(priorCollateralAmount, collateralToken.decimals))
+    const { belowMinimum, minimum } = await this.isBelowGelatoMinimum(
+      collateralAmount,
+      collateralToken,
+      gelato,
+      priorCollateralAmount,
+    )
 
-    if (minDepositAmount > depositAmount + priorDepositAmount) {
-      throw Error(
-        `To use Gelato's auto-withdraw service, you must deposit at least ${(
-          minDepositAmount - priorDepositAmount
-        ).toFixed(5)} ${collateralToken.symbol}`,
-      )
+    if (belowMinimum) {
+      logger.warn(`below gelato minimum ${minimum} ${collateralToken.symbol}, not using Gelato`)
+      return []
     }
 
     // Step 6: Enable Gelato Core as a module if not already done
@@ -716,6 +716,24 @@ class CPKService {
     })
 
     return transactions
+  }
+
+  isBelowGelatoMinimum = async (
+    amount: BigNumber,
+    collateralToken: Token,
+    gelato: GelatoService,
+    priorAmount?: BigNumber,
+  ) => {
+    if (!priorAmount) {
+      priorAmount = bigNumberify(0)
+    }
+    const minDepositAmount = await gelato.minimumTokenAmount(collateralToken.address, collateralToken.decimals)
+    const depositAmount = Number(ethers.utils.formatUnits(amount, collateralToken.decimals))
+    const priorDepositAmount = Number(ethers.utils.formatUnits(priorAmount, collateralToken.decimals))
+    return {
+      belowMinimum: minDepositAmount > depositAmount + priorDepositAmount,
+      minimum: minDepositAmount - priorDepositAmount,
+    }
   }
 }
 

@@ -1,6 +1,7 @@
 import React, { DOMAttributes } from 'react'
 import styled from 'styled-components'
 
+import { GELATO_MIN_USD_THRESH } from '../../../../common/constants'
 import { formatDate } from '../../../../util/tools'
 import { GelatoData } from '../../../../util/types'
 import { ButtonCircle } from '../../../button'
@@ -52,7 +53,7 @@ const Box = styled.div<{ boxType: string; isRow?: boolean }>`
   ${props =>
     props.boxType == 'condition'
       ? `align-items: flex-end;
-        margin-bottom: 4px;
+        margin-bottom: 5px;
         justify-content: space-between;`
       : ''}
 `
@@ -118,6 +119,8 @@ export type GelatoSchedulerProps = DOMAttributes<HTMLDivElement> & {
   gelatoData: GelatoData
   isScheduled: boolean
   execSuccess?: boolean
+  belowMinimum?: boolean
+  minimum?: number
   collateralToWithdraw?: string
   collateralSymbol?: string
   taskStatus?: string
@@ -128,6 +131,7 @@ export type GelatoSchedulerProps = DOMAttributes<HTMLDivElement> & {
 
 export const GelatoScheduler: React.FC<GelatoSchedulerProps> = (props: GelatoSchedulerProps) => {
   const {
+    belowMinimum,
     collateralSymbol,
     collateralToWithdraw,
     etherscanLink,
@@ -135,6 +139,7 @@ export const GelatoScheduler: React.FC<GelatoSchedulerProps> = (props: GelatoSch
     handleGelatoDataChange,
     handleGelatoDataInputsChange,
     isScheduled,
+    minimum,
     noMarginBottom,
     resolution,
     taskStatus,
@@ -188,45 +193,60 @@ export const GelatoScheduler: React.FC<GelatoSchedulerProps> = (props: GelatoSch
     return displayText
   }
 
-  const getTaskStatus = (status: string, withdrawalDate: Date) => {
-    const displayText = getCorrectTimeString(withdrawalDate)
-    switch (status) {
-      case 'awaitingExec':
-        return (
-          <Box boxType={'task'} isRow={true}>
-            <Description color="green" descriptionType={'task'}>{`scheduled in ${displayText}`}</Description>
-            <IconStyled color={'green'}>
-              <IconClock></IconClock>
-            </IconStyled>
-          </Box>
-        )
-      case 'execSuccess':
-        return (
-          <Box boxType={'task'} isRow={true}>
-            <Description color="green" descriptionType={'task'}>{`successful`}</Description>
-            <IconStyled color={'green'}>
-              <IconCheckmarkFilled></IconCheckmarkFilled>
-            </IconStyled>
-          </Box>
-        )
-      case 'execReverted':
-        return (
-          <Box boxType={'task'} isRow={true}>
-            <Description color="red" descriptionType={'task'}>{`failed`}</Description>
-            <IconStyled color={'red'}>
-              <IconAlert></IconAlert>
-            </IconStyled>
-          </Box>
-        )
-      case 'canceled':
-        return (
-          <Box boxType={'task'} isRow={true}>
-            <Description color="red" descriptionType={'task'}>{`canceled`}</Description>
-            <IconStyled color={'red'}>
-              <IconAlert></IconAlert>
-            </IconStyled>
-          </Box>
-        )
+  const getTaskStatus = (status?: string, withdrawlDate?: Date, belowMinimum?: boolean, minimum?: number) => {
+    if (withdrawlDate && status) {
+      const displayText = getCorrectTimeString(withdrawlDate)
+      switch (status) {
+        case 'awaitingExec':
+          return (
+            <Box boxType={'task'} isRow={true}>
+              <Description color="green" descriptionType={'task'}>{`scheduled in ${displayText}`}</Description>
+              <IconStyled color={'green'}>
+                <IconClock></IconClock>
+              </IconStyled>
+            </Box>
+          )
+        case 'execSuccess':
+          return (
+            <Box boxType={'task'} isRow={true}>
+              <Description color="green" descriptionType={'task'}>{`successful`}</Description>
+              <IconStyled color={'green'}>
+                <IconCheckmarkFilled></IconCheckmarkFilled>
+              </IconStyled>
+            </Box>
+          )
+        case 'execReverted':
+          return (
+            <Box boxType={'task'} isRow={true}>
+              <Description color="red" descriptionType={'task'}>{`failed`}</Description>
+              <IconStyled color={'red'}>
+                <IconAlert></IconAlert>
+              </IconStyled>
+            </Box>
+          )
+        case 'canceled':
+          return (
+            <Box boxType={'task'} isRow={true}>
+              <Description color="red" descriptionType={'task'}>{`canceled`}</Description>
+              <IconStyled color={'red'}>
+                <IconAlert></IconAlert>
+              </IconStyled>
+            </Box>
+          )
+      }
+    } else if (belowMinimum) {
+      return (
+        <Box boxType={'task'} isRow={true}>
+          <Description color="red" descriptionType={'task'}>
+            {`To enable Gelato deposit at least ${
+              minimum ? `${minimum.toFixed(3)} ${collateralSymbol}` : `${GELATO_MIN_USD_THRESH} USD`
+            }`}
+          </Description>
+          <IconStyled color={'red'}>
+            <IconAlert></IconAlert>
+          </IconStyled>
+        </Box>
+      )
     }
   }
 
@@ -237,7 +257,7 @@ export const GelatoScheduler: React.FC<GelatoSchedulerProps> = (props: GelatoSch
         <GelatoIconCircle>
           <IconGelato />
         </GelatoIconCircle>
-        {!isScheduled && (
+        {!isScheduled && !belowMinimum && (
           <>
             <Box boxType={'title'} isRow={false}>
               <Description descriptionType={'standard'} style={{ fontWeight: 500 }} textAlignRight={false}>
@@ -290,7 +310,7 @@ export const GelatoScheduler: React.FC<GelatoSchedulerProps> = (props: GelatoSch
             </Box>
 
             <Box boxType={'subtitle'} isRow={false}>
-              {getTaskStatus(taskStatus, gelatoData.inputs)}
+              {getTaskStatus(taskStatus, gelatoData.inputs, belowMinimum, minimum)}
 
               <Description descriptionType={'mini'} textAlignRight={true}>
                 {`${formatDate(gelatoData.inputs)}`}
@@ -298,13 +318,29 @@ export const GelatoScheduler: React.FC<GelatoSchedulerProps> = (props: GelatoSch
             </Box>
           </div>
         )}
+        {belowMinimum && !taskStatus && (
+          <>
+            <Box boxType={'title'} isRow={false}>
+              <Description descriptionType={'standard'} style={{ fontWeight: 500 }} textAlignRight={false}>
+                Gelato
+              </Description>
+              <Description
+                descriptionType={'standard'}
+                textAlignRight={false}
+              >{`Automatically withdraw liquidity ${daysBeforeWithdraw} days before market ends`}</Description>
+            </Box>
+            <Box boxType={'subtitle'} isRow={false}>
+              {getTaskStatus(undefined, undefined, belowMinimum, minimum)}
+            </Box>
+          </>
+        )}
       </Box>
       {taskStatus === 'awaitingExec' && (
         <Box boxType={'outer'} isRow={false}>
           <Description descriptionType={'standard'} textAlignRight={false}>
             {`Gelato will automatically withdraw your liquidity of ${collateralToWithdraw} ${collateralSymbol} on ${formatDate(
               gelatoData.inputs,
-            )} (with a network fee deducted from withdrawn ${collateralSymbol}). Cancel the auto-withdraw by manually withdrawing your liquidity.`}
+            )} (with a network fee deducted from the withdrawn ${collateralSymbol}). Cancel the auto-withdraw by manually withdrawing your liquidity.`}
           </Description>
         </Box>
       )}

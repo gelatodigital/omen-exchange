@@ -1,6 +1,6 @@
 import { Zero } from 'ethers/constants'
 import { BigNumber } from 'ethers/utils'
-import React, { ChangeEvent, useEffect, useMemo, useState } from 'react'
+import React, { ChangeEvent, useCallback, useEffect, useMemo, useState } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
 import styled from 'styled-components'
 
@@ -15,6 +15,7 @@ import {
   useCollateralBalance,
   useConnectedCPKContext,
   useConnectedWeb3Context,
+  useContracts,
   useCpkAllowance,
   useTokens,
 } from '../../../../../../hooks'
@@ -194,6 +195,7 @@ const FundingAndFeeStep: React.FC<Props> = (props: Props) => {
   const balance = useSelector((state: BalanceState): Maybe<BigNumber> => state.balance && new BigNumber(state.balance))
   const dispatch = useDispatch()
   const { account, library: provider } = context
+  const { gelato } = useContracts(context)
 
   const signer = useMemo(() => provider.getSigner(), [provider])
 
@@ -254,6 +256,21 @@ const FundingAndFeeStep: React.FC<Props> = (props: Props) => {
     setCollateralBalanceFormatted(formatBigNumber(maybeCollateralBalance || Zero, collateral.decimals, 5))
     // eslint-disable-next-line
   }, [maybeCollateralBalance])
+
+  const [belowGelatoMinimum, setBelowGelatoMinimum] = useState(false)
+  const [gelatoMinimum, setGelatoMinimum] = useState<number>(0)
+
+  const checkGelatoMinimum = useCallback(async () => {
+    if (cpk) {
+      const { belowMinimum, minimum } = await cpk.isBelowGelatoMinimum(funding, collateral, gelato)
+      setBelowGelatoMinimum(belowMinimum)
+      setGelatoMinimum(minimum)
+    }
+  }, [cpk, collateral, funding, gelato])
+
+  useEffect(() => {
+    checkGelatoMinimum()
+  }, [checkGelatoMinimum])
 
   useEffect(() => {
     setIsNegativeDepositAmount(formatBigNumber(funding, collateral.decimals).includes('-'))
@@ -465,10 +482,13 @@ const FundingAndFeeStep: React.FC<Props> = (props: Props) => {
         )}
         {GELATO_ACTIVATED && (
           <GelatoScheduler
+            belowMinimum={belowGelatoMinimum}
+            collateralSymbol={collateral.symbol}
             gelatoData={values.gelatoData}
             handleGelatoDataChange={handleGelatoDataChange}
             handleGelatoDataInputsChange={handleGelatoDataInputsChange}
             isScheduled={false}
+            minimum={gelatoMinimum}
             noMarginBottom={false}
             resolution={values.resolution !== null ? values.resolution : new Date()}
           />
@@ -517,7 +537,7 @@ const FundingAndFeeStep: React.FC<Props> = (props: Props) => {
       {!MarketCreationStatus.is.ready(marketCreationStatus) && !MarketCreationStatus.is.error(marketCreationStatus) ? (
         <FullLoading
           message={
-            values.gelatoData.shouldSubmit
+            values.gelatoData.shouldSubmit && !belowGelatoMinimum
               ? `${marketCreationStatus._type} and scheduling auto-withdraw with Gelato...`
               : `${marketCreationStatus._type}...`
           }
