@@ -5,7 +5,7 @@ import EthersAdapter from 'contract-proxy-kit/lib/esm/ethLibAdapters/EthersAdapt
 import { ethers } from 'ethers'
 import { Zero } from 'ethers/constants'
 import { TransactionReceipt, Web3Provider } from 'ethers/providers'
-import { BigNumber, bigNumberify } from 'ethers/utils'
+import { BigNumber } from 'ethers/utils'
 import moment from 'moment'
 
 import { getLogger } from '../util/logger'
@@ -725,7 +725,7 @@ class CPKService {
     priorAmount?: BigNumber,
   ) => {
     if (!priorAmount) {
-      priorAmount = bigNumberify(0)
+      priorAmount = Zero
     }
     const minDepositAmount = await gelato.minimumTokenAmount(collateralToken.address, collateralToken.decimals)
     const depositAmount = Number(ethers.utils.formatUnits(amount, collateralToken.decimals))
