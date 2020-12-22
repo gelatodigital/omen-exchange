@@ -27,7 +27,7 @@ export const GelatoConditions = (props: Props) => {
 
   const conditionOptions: Array<DropdownItemProps> = gelatoConditions.map((condition: GelatoData) => {
     return {
-      content: condition.id,
+      content: condition.id + ' . .',
       onClick: () => {
         onChange(condition.id)
         console.warn(`ID: ${condition.id}`)

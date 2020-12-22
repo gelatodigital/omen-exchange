@@ -374,11 +374,7 @@ export const GelatoScheduler: React.FC<GelatoSchedulerProps> = (props: GelatoSch
             <Description descriptionType={'condition'}>Withdraw Condition</Description>
             <FormRow
               formField={
-                <GelatoConditions
-                  disabled={false}
-                  onChangeGelatoCondition={handleGelatoDataChange}
-                  value={gelatoData}
-                />
+                <GelatoConditions disabled={true} onChangeGelatoCondition={handleGelatoDataChange} value={gelatoData} />
               }
             />
           </Box>
