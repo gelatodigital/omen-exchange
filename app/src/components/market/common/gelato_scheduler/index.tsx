@@ -362,7 +362,7 @@ export const GelatoScheduler: React.FC<GelatoSchedulerProps> = (props: GelatoSch
             />
           </Box>
           <Description descriptionType={'standard'} textAlignRight={false}>
-            {`Gelato will automatically withdraw your liquidity ${daysBeforeWithdraw} day(s) before the market will close on 
+            {`Gelato will automatically withdraw your liquidity ${daysBeforeWithdraw} day(s) before the market will close on
               ${formatDate(gelatoData.inputs)}
             `}
           </Description>

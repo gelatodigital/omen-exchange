@@ -1,15 +1,17 @@
+import { TaskReceiptWrapper } from '@gelatonetwork/core'
 import { txs } from '@gnosis.pm/safe-apps-sdk/dist/txs'
 import CPK from 'contract-proxy-kit/lib/esm'
 import EthersAdapter from 'contract-proxy-kit/lib/esm/ethLibAdapters/EthersAdapter'
 import { ethers } from 'ethers'
+import { Zero } from 'ethers/constants'
 import { TransactionReceipt, Web3Provider } from 'ethers/providers'
-import { BigNumber, bigNumberify } from 'ethers/utils'
+import { BigNumber } from 'ethers/utils'
 import moment from 'moment'
 
 import { getLogger } from '../util/logger'
 import { getCPKAddresses, getContractAddress } from '../util/networks'
 import { calcDistributionHint, waitABit } from '../util/tools'
-import { GelatoData, MarketData, Question, TaskReceiptWrapper, Token } from '../util/types'
+import { GelatoData, MarketData, Question, /*TaskReceiptWrapper, */ Token } from '../util/types'
 
 import { ConditionalTokenService } from './conditional_token'
 import { ERC20Service } from './erc20'
@@ -348,7 +350,7 @@ class CPKService {
       if (gelatoData.shouldSubmit) {
         const gelatoTransactions = await this.addGelatoSubmitTransaction(
           marketData.funding,
-          bigNumberify(0), // no prior funding, new market
+          Zero, // no prior funding, new market
           gelatoData,
           gelato,
           outcomes.length,

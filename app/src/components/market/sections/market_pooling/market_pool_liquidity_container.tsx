@@ -1,6 +1,7 @@
+import { TaskReceipt } from '@gelatonetwork/core'
 import React from 'react'
 
-import { MarketDetailsTab, MarketMakerData, TaskReceipt } from '../../../../util/types'
+import { MarketDetailsTab, MarketMakerData } from '../../../../util/types'
 
 import { MarketPoolLiquidity } from './market_pool_liquidity'
 

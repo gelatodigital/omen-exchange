@@ -1,9 +1,17 @@
+import {
+  Action as GelatoAction,
+  Condition as GelatoCondition,
+  GelatoProvider,
+  Operation,
+  Task,
+  TaskReceipt,
+} from '@gelatonetwork/core'
 import { Contract, Wallet, constants, ethers, utils } from 'ethers'
 
 import { GELATO_MIN_USD_THRESH } from '../common/constants'
 import { getLogger } from '../util/logger'
 import { getToken } from '../util/networks'
-import { GelatoData, Operation, TaskReceipt } from '../util/types'
+import { GelatoData } from '../util/types'
 
 const logger = getLogger('Services::GelatoService')
 
@@ -148,17 +156,17 @@ class GelatoService {
 
     const gelatoCoreInterface = new utils.Interface(gelatoCoreAbi)
 
-    const gelatoProvider = {
+    const gelatoProvider = new GelatoProvider({
       addr: this.addresses.gelatoProvider,
       module: this.addresses.providerModuleGnosisSafe,
-    }
+    })
 
     const timestamp = Date.parse(taskData.gelatoData.inputs.toString()) / 1000
 
-    const condition = {
+    const condition = new GelatoCondition({
       inst: this.addresses.conditionTime,
       data: utils.defaultAbiCoder.encode(['uint'], [timestamp]),
-    }
+    })
 
     const actionWithdrawLiquidityInterface = new utils.Interface(actionWithdrawLiquidutyAbi)
 
@@ -172,21 +180,16 @@ class GelatoService {
       taskData.receiver,
     ])
 
-    const action = {
+    const action = new GelatoAction({
       addr: this.addresses.actionWithdrawLiquidity,
       data: actionWithdrawLiquidityData,
       operation: Operation.Delegatecall,
-      dataFlow: 0, // None
-      value: 0, // None
-      termsOkCheck: false,
-    }
+    })
 
-    const task = {
+    const task = new Task({
       conditions: [condition],
       actions: [action],
-      selfProviderGasLimit: 0, // not applicable
-      selfProviderGasPriceCeil: 0, // not applicable
-    }
+    })
 
     const expiryDate = 0 // Not expiring
 
