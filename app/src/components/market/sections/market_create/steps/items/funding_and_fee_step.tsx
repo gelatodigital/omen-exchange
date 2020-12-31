@@ -190,7 +190,7 @@ interface Props {
   handleCollateralChange: (collateral: Token) => void
   handleTradingFeeChange: (fee: string) => void
   handleGelatoDataChange: (gelatoData: GelatoData) => any
-  handleGelatoDataInputsChange: (newDate: Date | null) => any
+  handleGelatoDataInputChange: (newDate: Date | null) => any
   handleChange: (event: ChangeEvent<HTMLInputElement> | ChangeEvent<HTMLSelectElement> | BigNumberInputReturn) => any
   resetTradingFee: () => void
   state: string
@@ -211,7 +211,7 @@ const FundingAndFeeStep: React.FC<Props> = (props: Props) => {
     handleChange,
     handleCollateralChange,
     handleGelatoDataChange,
-    handleGelatoDataInputsChange,
+    handleGelatoDataInputChange,
     handleTradingFeeChange,
     marketCreationStatus,
     resetTradingFee,
@@ -543,7 +543,7 @@ const FundingAndFeeStep: React.FC<Props> = (props: Props) => {
             collateralSymbol={collateral.symbol}
             gelatoData={values.gelatoData}
             handleGelatoDataChange={handleGelatoDataChange}
-            handleGelatoDataInputsChange={handleGelatoDataInputsChange}
+            handleGelatoDataInputChange={handleGelatoDataInputChange}
             isScheduled={false}
             minimum={gelatoMinimum}
             noMarginBottom={false}
