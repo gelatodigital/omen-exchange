@@ -467,7 +467,7 @@ interface KnownArbitratorData {
 interface KnownGelatoConditionData {
   id: string
   shouldSubmit: boolean
-  inputs: Date | null
+  input: Date | null
 }
 
 export const knownArbitrators: { [name in KnownArbitrator]: KnownArbitratorData } = {
@@ -494,7 +494,7 @@ export const knownGelatoConditions: { [name in KnownGelatoCondition]: KnownGelat
   time: {
     id: 'time',
     shouldSubmit: false,
-    inputs: null,
+    input: null,
   },
 }
 
@@ -521,7 +521,7 @@ export const getGelatoCondition = (conditionId: KnownGelatoCondition): GelatoDat
   return {
     id: conditionId,
     shouldSubmit: condition.shouldSubmit,
-    inputs: null,
+    input: null,
   }
 }
 
@@ -635,12 +635,12 @@ export const getGelatoConditionByNetwork = (networkId: number): GelatoData[] => 
 
   return Object.values(knownGelatoConditions)
     .map(condition => {
-      const { inputs, shouldSubmit } = condition
+      const { input, shouldSubmit } = condition
       const id = condition.id as KnownGelatoCondition
 
       return {
         id,
-        inputs,
+        input,
         shouldSubmit,
       }
     })
