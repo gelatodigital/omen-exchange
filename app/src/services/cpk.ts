@@ -978,7 +978,7 @@ class CPKService {
       throw err
     }
   }
-  
+
   addGelatoSubmitTransaction = async (
     collateralAmount: BigNumber,
     priorCollateralAmount: BigNumber,
