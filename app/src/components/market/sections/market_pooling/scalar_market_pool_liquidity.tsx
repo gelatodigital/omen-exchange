@@ -189,8 +189,14 @@ export const ScalarMarketPoolLiquidity = (props: Props) => {
 
       await cpk.addFunding({
         amount: amountToFund || Zero,
+        priorCollateralAmount: depositedTokensTotal,
         collateral,
         marketMaker,
+        gelato: null,
+        gelatoData: null,
+        conditionalTokens,
+        conditionId: '',
+        submittedTaskReceiptWrapper: null,
       })
 
       await fetchGraphMarketMakerData()
@@ -231,6 +237,8 @@ export const ScalarMarketPoolLiquidity = (props: Props) => {
         marketMaker,
         outcomesCount: balances.length,
         sharesToBurn: amountToRemove || Zero,
+        taskReceiptWrapper: null,
+        gelato: null,
       })
       await fetchGraphMarketMakerData()
       await fetchFundingBalance()

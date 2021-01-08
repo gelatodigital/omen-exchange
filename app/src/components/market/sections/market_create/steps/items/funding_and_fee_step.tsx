@@ -537,7 +537,7 @@ const FundingAndFeeStep: React.FC<Props> = (props: Props) => {
             hyperlinkDescription={''}
           />
         )}
-        {GELATO_ACTIVATED && (
+        {GELATO_ACTIVATED && state !== 'SCALAR' && (
           <GelatoScheduler
             belowMinimum={belowGelatoMinimum}
             collateralSymbol={collateral.symbol}
