@@ -48,7 +48,7 @@ interface CPKCreateMarketParams {
   conditionalTokens: ConditionalTokenService
   realitio: RealitioService
   marketMakerFactory: MarketMakerFactoryService
-  gelato: GelatoService
+  gelato: GelatoService | null
 }
 
 interface CPKAddFundingParams {
@@ -56,8 +56,8 @@ interface CPKAddFundingParams {
   priorCollateralAmount: BigNumber
   collateral: Token
   marketMaker: MarketMakerService
-  gelato: GelatoService
-  gelatoData: GelatoData
+  gelato: GelatoService | null
+  gelatoData: GelatoData | null
   conditionalTokens: ConditionalTokenService
   conditionId: string
   submittedTaskReceiptWrapper: TaskReceiptWrapper | null
@@ -73,7 +73,7 @@ interface CPKRemoveFundingParams {
   outcomesCount: number
   sharesToBurn: BigNumber
   taskReceiptWrapper: TaskReceiptWrapper | null
-  gelato: GelatoService
+  gelato: GelatoService | null
 }
 
 interface CPKRedeemParams {
@@ -275,16 +275,7 @@ class CPKService {
     realitio,
   }: CPKCreateMarketParams): Promise<CreateMarketResult> => {
     try {
-      const { 
-        arbitrator,
-        category,
-        gelatoData,
-        loadedQuestionId,
-        outcomes,
-        question,
-        resolution,
-        spread 
-      } = marketData
+      const { arbitrator, category, gelatoData, loadedQuestionId, outcomes, question, resolution, spread } = marketData
 
       if (!resolution) {
         throw new Error('Resolution time was not specified')
@@ -417,7 +408,7 @@ class CPKService {
         ),
       })
 
-      if (gelatoData.shouldSubmit) {
+      if (gelatoData.shouldSubmit && gelato !== null) {
         const gelatoTransactions = await this.addGelatoSubmitTransaction(
           marketData.funding,
           Zero, // no prior funding, new market
@@ -778,10 +769,12 @@ class CPKService {
       // Submit Gelato Task if selection is enabled and no other task was submitted beforehand
       // @dev => Assuming only one task can be submitted for each market
       if (
-        (gelatoData.shouldSubmit && !submittedTaskReceiptWrapper) ||
-        (gelatoData.shouldSubmit &&
-          submittedTaskReceiptWrapper &&
-          submittedTaskReceiptWrapper.status !== 'awaitingExec')
+        gelatoData !== null &&
+        gelato !== null &&
+        ((gelatoData.shouldSubmit && !submittedTaskReceiptWrapper) ||
+          (gelatoData.shouldSubmit &&
+            submittedTaskReceiptWrapper &&
+            submittedTaskReceiptWrapper.status !== 'awaitingExec'))
       ) {
         const outcomesSlotCount = await conditionalTokens.getOutcomeSlotCount(conditionId)
         const outcomeSlotCountInt = parseInt(outcomesSlotCount.toString())
@@ -844,7 +837,7 @@ class CPKService {
       const transactions = [removeFundingTx, mergePositionsTx]
 
       // If Gelato task is still active
-      if (taskReceiptWrapper && taskReceiptWrapper.status === 'awaitingExec') {
+      if (gelato !== null && taskReceiptWrapper && taskReceiptWrapper.status === 'awaitingExec') {
         // Cancel Gelato Task when withdrawing
         const cancelTaskData = gelato.encodeCancelTask(taskReceiptWrapper.taskReceipt)
         transactions.push({
