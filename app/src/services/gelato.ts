@@ -81,17 +81,17 @@ const gelatoContracts: GelatoContracts = {
   addresses: {
     rinkeby: {
       gelatoCore: '0x733aDEf4f8346FD96107d8d6605eA9ab5645d632',
-      gelatoProvider: '0x01056a4A95a88035af4fC9fD9fD4d4563dd284C3',
+      gelatoProvider: '0x4B5BaD436CcA8df3bD39A095b84991fAc9A226F1',
       providerModuleGnosisSafe: '0x28ec977614E3cA9Ac4a5A48f44e8BDD9232ba21f',
       conditionTime: '0xC92Bc7c905d52B4bC4d60719a8Bce3B643d77daF',
-      actionWithdrawLiquidity: '0x101F34DD8B3B831E1579D5Cb62221bbdA11186A2',
+      actionWithdrawLiquidity: '0xCE5C26ad5942D1667Df758d64D8e7E370BDc9BAd',
     },
     mainnet: {
       gelatoCore: '0x025030bdaa159f281cae63873e68313a703725a5',
       gelatoProvider: '0x3d9A46b5D421bb097AC28B4f70a4A1441A12920C',
       providerModuleGnosisSafe: '0x2E87AD9BBdaa9113cd5cA1920c624E2749D7086B',
       conditionTime: '0x63129681c487d231aa9148e1e21837165f38deaf',
-      actionWithdrawLiquidity: '0x301E130DAA16B2F8FAeB21E1a328EAB0d606AC12',
+      actionWithdrawLiquidity: '0xe9BaDf78e17a3386137F751DadaA5D03CC8a235E',
     },
   },
 }

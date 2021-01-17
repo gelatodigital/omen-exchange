@@ -52,10 +52,10 @@ export const TRADING_FEE_OPTIONS = [
   '5.00',
 ]
 
-export const GRAPH_MAINNET_HTTP = 'https://api.thegraph.com/subgraphs/name/hilmarx/gelato-omen-mainnet'
-export const GRAPH_MAINNET_WS = 'wss://api.thegraph.com/subgraphs/name/hilmarx/gelato-omen-mainnet'
-export const GRAPH_RINKEBY_HTTP = 'https://api.thegraph.com/subgraphs/name/hilmarx/omen-gelato'
-export const GRAPH_RINKEBY_WS = 'wss://api.thegraph.com/subgraphs/name/hilmarx/omen-gelato'
+export const GRAPH_MAINNET_HTTP = 'https://api.thegraph.com/subgraphs/name/protofire/omen'
+export const GRAPH_MAINNET_WS = 'wss://api.thegraph.com/subgraphs/name/protofire/omen'
+export const GRAPH_RINKEBY_HTTP = 'https://api.thegraph.com/subgraphs/name/protofire/omen-rinkeby'
+export const GRAPH_RINKEBY_WS = 'wss://api.thegraph.com/subgraphs/name/protofire/omen-rinkeby'
 export const GRAPH_SOKOL_HTTP = 'https://api.thegraph.com/subgraphs/name/protofire/omen-sokol'
 export const GRAPH_SOKOL_WS = 'wss://api.thegraph.com/subgraphs/name/protofire/omen-sokol'
 export const GRAPH_XDAI_HTTP = 'https://api.thegraph.com/subgraphs/name/protofire/omen-xdai'

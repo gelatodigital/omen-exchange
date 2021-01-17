@@ -1,5 +1,5 @@
-import SafeAppsSDK from '@gnosis.pm/safe-apps-sdk'
 import { TaskReceiptWrapper } from '@gelatonetwork/core'
+import SafeAppsSDK from '@gnosis.pm/safe-apps-sdk'
 import { ethers } from 'ethers'
 import { Zero } from 'ethers/constants'
 import { TransactionReceipt, Web3Provider } from 'ethers/providers'
