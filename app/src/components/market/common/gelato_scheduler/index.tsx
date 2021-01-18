@@ -196,7 +196,7 @@ export const GelatoScheduler: React.FC<GelatoSchedulerProps> = (props: GelatoSch
     return displayText
   }
 
-  const getTaskStatus = (status?: string, withdrawlDate?: Date, belowMinimum?: boolean, minimum?: number) => {
+  const getTaskStatus = (status?: string, withdrawlDate?: Date) => {
     if (withdrawlDate && status) {
       const displayText = getCorrectTimeString(withdrawlDate)
       switch (status) {
@@ -239,19 +239,6 @@ export const GelatoScheduler: React.FC<GelatoSchedulerProps> = (props: GelatoSch
             </Box>
           )
       }
-    } else if (belowMinimum) {
-      return (
-        <Box boxType={'task'} isRow={true}>
-          <Description color="red" descriptionType={'task'} margins={'0 8px 0 0'}>
-            {`To enable Gelato deposit at least ${
-              minimum ? `${minimum.toFixed(3)} ${collateralSymbol}` : `${GELATO_MIN_USD_THRESH} USD`
-            }`}
-          </Description>
-          <IconStyled>
-            <IconAlert bg={'red'} fill={'white'}></IconAlert>
-          </IconStyled>
-        </Box>
-      )
     }
   }
 
@@ -274,14 +261,11 @@ export const GelatoScheduler: React.FC<GelatoSchedulerProps> = (props: GelatoSch
               >{`Automatically withdraw liquidity ${daysBeforeWithdraw} days before market ends`}</Description>
             </Box>
 
-            <ButtonCircleStyled
-              active={active ? true : false}
-              disabled={active ? false : true}
-              filled={false}
-              onClick={toggleCustomizable}
-            >
-              <IconFilter />
-            </ButtonCircleStyled>
+            {active && (
+              <ButtonCircleStyled active={true} disabled={false} filled={false} onClick={toggleCustomizable}>
+                <IconFilter />
+              </ButtonCircleStyled>
+            )}
 
             {!active && (
               <ButtonCircleStyled
@@ -292,7 +276,7 @@ export const GelatoScheduler: React.FC<GelatoSchedulerProps> = (props: GelatoSch
                 style={{ backgroundColor: 'white' }}
               >
                 <IconStyled large={true}>
-                  <IconTick />
+                  <IconTick fill={'#757575'} />
                 </IconStyled>
               </ButtonCircleStyled>
             )}
@@ -317,7 +301,7 @@ export const GelatoScheduler: React.FC<GelatoSchedulerProps> = (props: GelatoSch
             </Box>
 
             <Box boxType={'subtitle'} isRow={false}>
-              {getTaskStatus(taskStatus, gelatoData.input, belowMinimum, minimum)}
+              {getTaskStatus(taskStatus, gelatoData.input)}
 
               <Description margins={'6px 0 0 0'} textAlignRight={true}>
                 {`${formatDate(gelatoData.input)}`}
@@ -328,17 +312,22 @@ export const GelatoScheduler: React.FC<GelatoSchedulerProps> = (props: GelatoSch
         {belowMinimum && !taskStatus && (
           <>
             <Box boxType={'title'} isRow={false}>
-              <Description margins={'0 25px 0 0'} style={{ fontWeight: 500 }} textAlignRight={false}>
+              <Description margins={'0 25px 0 0'} style={{ fontWeight: 500, color: '#37474F' }} textAlignRight={false}>
                 Gelato
               </Description>
-              <Description
-                margins={'0 25px 0 0'}
-                textAlignRight={false}
-              >{`Automatically withdraw liquidity ${daysBeforeWithdraw} days before market ends`}</Description>
+              <Description margins={'0 25px 0 0'} textAlignRight={false}>
+                {`Schedule auto withdraw with minimum funding of ${
+                  minimum
+                    ? `${Math.ceil(minimum * 100000) / 100000} ${collateralSymbol}`
+                    : `${GELATO_MIN_USD_THRESH} USD`
+                }`}
+              </Description>
             </Box>
-            <Box boxType={'subtitle'} isRow={false}>
-              {getTaskStatus(undefined, undefined, belowMinimum, minimum)}
-            </Box>
+            <ButtonCircleStyled disabled={true} filled={false} style={{ backgroundColor: 'white' }}>
+              <IconStyled large={true}>
+                <IconTick disabled={true} fill={'#757575'} />
+              </IconStyled>
+            </ButtonCircleStyled>
           </>
         )}
       </Box>
