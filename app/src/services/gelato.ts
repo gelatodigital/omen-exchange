@@ -170,6 +170,8 @@ class GelatoService {
 
     const actionWithdrawLiquidityInterface = new utils.Interface(actionWithdrawLiquidityAbi)
 
+    if (taskData.collateralTokenAddress == pseudoNativeAssetAddress) throw Error('Gelato task collateral cannot be ETH')
+
     const actionWithdrawLiquidityData = actionWithdrawLiquidityInterface.functions.action.encode([
       taskData.conditionalTokensAddress,
       taskData.fpmmAddress,

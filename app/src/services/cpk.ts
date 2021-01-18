@@ -393,7 +393,7 @@ class CPKService {
         this.cpk.address,
         spread,
       )
-      logger.log(`Predicted market maker address: ${predictedMarketMakerAddress}`)
+
       const distributionHint = calcDistributionHint(marketData.outcomes.map(o => o.probability))
       transactions.push({
         to: marketMakerFactory.address,
@@ -407,7 +407,6 @@ class CPKService {
           distributionHint,
         ),
       })
-
       if (gelatoData.shouldSubmit && gelato !== null) {
         const gelatoTransactions = await this.addGelatoSubmitTransaction(
           marketData.funding,
@@ -714,10 +713,10 @@ class CPKService {
         txOptions.gas = 500000
       }
 
-      let collateralAddress
+      let fixedCollateral
       if (collateral.address === pseudoNativeAssetAddress) {
         // ultimately WETH will be the collateral if we fund with native ether
-        collateralAddress = getWrapToken(networkId).address
+        fixedCollateral = getWrapToken(networkId)
 
         // we need to send the funding amount in native ether
         if (!this.cpk.isSafeApp()) {
@@ -726,15 +725,15 @@ class CPKService {
 
         // Step 0: Wrap ether
         transactions.push({
-          to: collateralAddress,
+          to: fixedCollateral.address,
           value: amount,
         })
       } else {
-        collateralAddress = collateral.address
+        fixedCollateral = collateral
       }
 
       // Check  if the allowance of the CPK to the market maker is enough.
-      const collateralService = new ERC20Service(this.provider, account, collateralAddress)
+      const collateralService = new ERC20Service(this.provider, account, fixedCollateral.address)
 
       const hasCPKEnoughAlowance = await collateralService.hasEnoughAllowance(
         this.cpk.address,
@@ -745,7 +744,7 @@ class CPKService {
       if (!hasCPKEnoughAlowance) {
         // Step 1:  Approve unlimited amount to be transferred to the market maker
         transactions.push({
-          to: collateralAddress,
+          to: fixedCollateral.address,
           data: ERC20Service.encodeApproveUnlimited(marketMaker.address),
         })
       }
@@ -788,7 +787,7 @@ class CPKService {
           outcomeSlotCountInt,
           conditionalTokens,
           conditionId,
-          collateral,
+          fixedCollateral,
           marketMaker.address,
           account,
         )
