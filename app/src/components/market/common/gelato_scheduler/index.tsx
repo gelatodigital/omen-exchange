@@ -1,93 +1,78 @@
-import React, { DOMAttributes } from 'react'
+import React, { DOMAttributes, useEffect } from 'react'
 import styled from 'styled-components'
 
 import { GELATO_MIN_USD_THRESH } from '../../../../common/constants'
 import { formatDate } from '../../../../util/tools'
 import { GelatoData } from '../../../../util/types'
-import { ButtonCircle } from '../../../button'
 import { DateField, FormRow } from '../../../common'
 import { IconAlert } from '../../../common/icons/IconAlert'
 import { IconClock } from '../../../common/icons/IconClock'
-import { IconFilter } from '../../../common/icons/IconFilter'
+import { IconCustomize } from '../../../common/icons/IconCustomize'
 import { IconGelato } from '../../../common/icons/IconGelato'
 import { IconTick } from '../../../common/icons/IconTick'
 import { GelatoConditions } from '../gelato_conditions'
 
-const Wrapper = styled.div<{ noMarginBottom: boolean }>`
-  ${props => (props.noMarginBottom ? 'margin-bottom: 0;' : 'margin-bottom: 24px')};
-`
-
-const Title = styled.h2`
-  color: ${props => props.theme.colors.textColorDarker};
-  font-size: 16px;
-  letter-spacing: 0.4px;
-  line-height: 1.2;
-  margin: 0 0 20px;
-  font-weight: 400;
-`
-
-const Box = styled.div<{ boxType: string; isRow?: boolean; isBold?: boolean; isStretch?: boolean }>`
+const TaskInfoWrapper = styled.div`
   display: flex;
-  flex-direction: ${props => (props.isRow ? 'row' : 'column')};
-  ${props => (props.isBold ? 'font-weight: 500;' : '')}
-  ${props =>
-    props.boxType == 'outer'
-      ? `align-items: ${props.isStretch ? 'stretch' : 'center'};
-        border-radius: 4px;
-        padding: 21px 25px;
-        border: 1px solid ${props.theme.borders.borderDisabled};`
-      : ''}
-  ${props =>
-    props.boxType == 'title'
-      ? `align-items: flex-start;
-        margin-left: 6px;
-        flex-wrap: nowrap;`
-      : ''}
-  ${props =>
-    props.boxType == 'subtitle'
-      ? `align-items: flex-end;
-        justify-content: center;
-        margin-left: 8px;
-        flex-wrap: nowrap;`
-      : ''}
-  ${props =>
-    props.boxType == 'condition'
-      ? `align-items: center;
-        margin-bottom: 20px;
-        vertical-align: bottom;
-        justify-content: space-between;`
-      : ''}
+  flex-direction: row;
+  font-weight: 500;
 `
 
-const Description = styled.div<{ descriptionType?: string; textAlignRight?: boolean; margins?: string }>`
-  color: ${props => (props.descriptionType == 'task' ? props.color : props.theme.colors.textColorLightish)};
+const TaskInfo = styled.div<{ color?: string }>`
+  color: ${props => (props.color ? props.color : props.theme.colors.textColorLightish)};
   font-size: 14px;
   letter-spacing: 0.2px;
   line-height: 1.4;
-  ${props => (props.margins ? `margin: ${props.margins};` : '')}
-  ${props =>
-    props.descriptionType == 'condition' ? '' : props.textAlignRight ? 'text-align: right;' : 'text-align: left;'}
-  ${props => (props.descriptionType == 'condition' ? '' : 'vertical-align: middle;\ndisplay: inline-block;')}
+  margin: 0 0 0 0;
+  text-align: left;
+  vertical-align: middle;
+  display: inline-block;
+`
+const GelatoExtendedWrapper = styled.div<{ isStretch?: boolean }>`
+  display: flex;
+  flex-direction: column;
+  align-items: ${props => (props.isStretch ? 'stretch' : 'center')};
+  border-radius: 4px;
+  margin-top: 20px;
+  padding-top: 12px;
+  padding-bottom: 34px;
+  padding-right: 20px;
+  padding-left: 20px;
+  border: 1px solid ${props => props.theme.borders.borderDisabled};
 `
 
-const ButtonCircleStyled = styled(ButtonCircle)<{ disabled?: boolean; filled?: boolean }>`
-  svg {
-    filter: ${props =>
-      props.disabled
-        ? 'invert(46%) sepia(0%) saturate(1168%) hue-rotate(183deg) brightness(99%) contrast(89%)'
-        : 'none'};
-    ${props => (props.filled ? `fill: ${props.theme.colors.mainBodyBackground};` : '')}
-  }
-  ${props => (props.filled ? `background-color: ${props.theme.colors.clickable};` : '')}
-  margin-right: 8px;
+const TaskStatusWrapper = styled.div`
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  justify-content: center;
+  margin-left: 8px;
+  flex-wrap: nowrap;
+`
+
+const ConditionWrapper = styled.div`
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  margin-bottom: 20px;
+  vertical-align: bottom;
+  justify-content: space-between;
+`
+
+const ConditionTitle = styled.div`
+  font-size: 14px;
+  letter-spacing: 0.2px;
+  line-height: 1.4;
+  text-align: left;
+  color: #37474f;
 `
 
 const IconStyled = styled.div<{ color?: string; large?: boolean }>`
   line-height: 1;
   svg {
     fill: ${props => props.color};
-    width: ${props => (props.large ? '1rem' : '0.9rem')};
-    height: ${props => (props.large ? '1rem' : '0.9rem')};
+    width: ${props => (props.large ? '1.1rem' : '0.9rem')};
+    height: ${props => (props.large ? '1.1rem' : '0.9rem')};
     vertical-align: inherit;
   }
 `
@@ -105,6 +90,148 @@ const GelatoIconCircle = styled.button<{ active?: boolean }>`
   transition: border-color 0.15s linear;
   user-select: none;
   width: ${props => props.theme.buttonCircle.dimensions};
+`
+
+const Wrapper = styled.div`
+  border-radius: 4px;
+  border: ${({ theme }) => theme.borders.borderLineDisabled};
+  padding: 18px 25px;
+  margin-bottom: 20px;
+`
+
+const Title = styled.h2`
+  color: ${props => props.theme.colors.textColorDark};
+  font-size: 16px;
+  letter-spacing: 0.4px;
+  line-height: 1.2;
+  margin: 0 0 20px;
+  font-weight: 400;
+`
+
+const DescriptionWrapper = styled.div`
+  align-items: center;
+  display: flex;
+`
+
+const CheckService = styled.div<{ isActive: boolean; disabled?: boolean }>`
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  text-align: center;
+  border: 1px solid ${props => (props.isActive ? props.theme.colors.transparent : props.theme.colors.tertiary)};
+  background-color: ${props => (props.isActive ? props.theme.colors.clickable : props.theme.colors.mainBodyBackground)};
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  &:hover {
+    border: 1px solid ${props => (props.isActive ? 'none' : props.theme.colors.tertiaryDark)};
+    cursor: ${props => (props.disabled ? 'not-allowed' : 'pointer')};
+  }
+  &:active {
+    border: none;
+  }
+  path {
+    fill: ${props => (props.isActive ? props.theme.colors.mainBodyBackground : props.theme.textfield.textColorDark)};
+  }
+`
+
+const ToggleService = styled.div<{ isActive: boolean; disabled?: boolean }>`
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  text-align: center;
+  border: 1px solid ${props => (props.isActive ? props.theme.colors.transparent : props.theme.colors.tertiary)};
+  background-color: ${props =>
+    props.isActive ? props.theme.buttonSecondary.backgroundColor : props.theme.colors.mainBodyBackground};
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  &:hover {
+    border: 1px solid ${props => (props.isActive ? 'none' : props.theme.colors.tertiaryDark)};
+    cursor: ${props => (props.disabled ? 'none' : 'pointer')};
+  }
+  &:active {
+    border: none;
+  }
+  path {
+    fill: ${props => (props.isActive ? '#3F51B5' : '#37474F')};
+  }
+`
+
+const ServiceWrapper = styled.div`
+  color: ${props => props.theme.colors.textColorLightish};
+  font-size: ${props => props.theme.textfield.fontSize};
+  letter-spacing: 0.2px;
+  line-height: 1.4;
+  display: flex;
+  -webkit-flex-direction: row;
+  -ms-flex-direction: row;
+  flex-direction: row;
+  -webkit-box-pack: justify;
+`
+
+const ServiceIconWrapper = styled.div`
+  display: flex;
+  padding-right: 16px;
+  text-align: center;
+  -webkit-box-align: center;
+`
+
+const ServiceTextWrapper = styled.div`
+  width: 90%;
+`
+
+const ServiceCheckWrapper = styled.div`
+  width: 10%;
+  color: transparent;
+`
+const ServiceToggleWrapper = styled.div`
+  width: 10%;
+  color: transparent;
+  margin-right: 12px;
+`
+
+const ServiceTokenDetails = styled.div`
+  width: 100%;
+  display: flex;
+`
+
+const GelatoServiceDescription = styled.div`
+  color: ${props => props.theme.colors.textColorLightish};
+  font-size: ${props => props.theme.textfield.fontSize};
+  letter-spacing: 0.2px;
+  line-height: 1.4;
+  margin: 0 8px 0 0;
+  width: 100%;
+`
+
+const TextHeading = styled.div`
+  color: ${props => props.theme.colors.textColorDark};
+  width: 71px;
+  height: 16px;
+  left: 54px;
+  top: calc(50% - 16px / 2 - 11px);
+  font-weight: 500;
+  font-size: 14px;
+  line-height: 16px;
+  display: flex;
+  align-items: center;
+  letter-spacing: 0.2px;
+  margin: 0px 6px 0px 0px;
+`
+
+const TextBody = styled.div<{ margins?: string; textAlignRight?: boolean }>`
+  line-height: 16px;
+  font-size: 14px;
+  height: 16px;
+  color: #86909e;
+  margin: ${props => (props.margins ? props.margins : '6px 6px 0px 0px')};
+  text-align: ${props => (props.textAlignRight ? 'right' : 'left')};
+`
+
+const TextBodyMarker = styled.span<{ color?: string }>`
+  color: ${props => (props.color ? props.color : props.theme.colors.textColorLightish)};
+  font-weight: 500;
 `
 
 export type GelatoSchedulerProps = DOMAttributes<HTMLDivElement> & {
@@ -160,6 +287,10 @@ export const GelatoScheduler: React.FC<GelatoSchedulerProps> = (props: GelatoSch
     (Date.parse(resolution.toString()) - Date.parse(gelatoData.input.toString())) / 1000 / 60 / 60 / 24,
   )
 
+  const daysUntilWithdraw = Math.round(
+    (Date.parse(gelatoData.input.toString()) - Date.parse(new Date().toString())) / 1000 / 60 / 60 / 24,
+  )
+
   const toggleActive = () => {
     const newGelatoCondition = {
       ...gelatoData,
@@ -196,153 +327,144 @@ export const GelatoScheduler: React.FC<GelatoSchedulerProps> = (props: GelatoSch
     return displayText
   }
 
+  useEffect(() => {
+    if (belowMinimum) {
+      setActive(false)
+    }
+  }, [belowMinimum])
+
   const getTaskStatus = (status?: string, withdrawlDate?: Date) => {
     if (withdrawlDate && status) {
       const displayText = getCorrectTimeString(withdrawlDate)
       switch (status) {
         case 'awaitingExec':
           return (
-            <Box boxType={'task'} isBold={true} isRow={true}>
-              <Description color="#4B9E98" descriptionType={'task'} margins={'0 8px 0 0'}>
-                {`scheduled in ${displayText}`}
-              </Description>
+            <TaskInfoWrapper>
+              <TaskInfo color="#4B9E98">{`scheduled in ${displayText}`}</TaskInfo>
               <IconStyled color={'#4B9E98'}>
                 <IconClock></IconClock>
               </IconStyled>
-            </Box>
+            </TaskInfoWrapper>
           )
         case 'execSuccess':
           return (
-            <Box boxType={'task'} isBold={true} isRow={true}>
-              <Description color="#4B9E98" descriptionType={'task'} margins={'0 8px 0 0'}>{`successful`}</Description>
+            <TaskInfoWrapper>
+              <TaskInfo color="#4B9E98">{`successful`}</TaskInfo>
               <IconStyled>
                 <IconTick fill={'#4B9E98'} />
               </IconStyled>
-            </Box>
+            </TaskInfoWrapper>
           )
         case 'execReverted':
           return (
-            <Box boxType={'task'} isBold={true} isRow={true}>
-              <Description color="red" descriptionType={'task'} margins={'0 8px 0 0'}>{`failed`}</Description>
+            <TaskInfoWrapper>
+              <TaskInfo color="red">{`failed`}</TaskInfo>
               <IconStyled>
                 <IconAlert bg={'red'} fill={'white'}></IconAlert>
               </IconStyled>
-            </Box>
+            </TaskInfoWrapper>
           )
         case 'canceled':
           return (
-            <Box boxType={'task'} isBold={true} isRow={true}>
-              <Description color="red" descriptionType={'task'} margins={'0 8px 0 0'}>{`canceled`}</Description>
+            <TaskInfoWrapper>
+              <TaskInfo color="red">{`canceled`}</TaskInfo>
               <IconStyled>
                 <IconAlert bg={'red'} fill={'white'}></IconAlert>
               </IconStyled>
-            </Box>
+            </TaskInfoWrapper>
           )
       }
     }
   }
 
   return (
-    <Wrapper noMarginBottom={noMarginBottom} {...restProps}>
+    <Wrapper>
       <Title>Recommended Services</Title>
-      <Box boxType={'outer'} isRow={true}>
-        <GelatoIconCircle>
-          <IconGelato />
-        </GelatoIconCircle>
-        {!isScheduled && !belowMinimum && (
-          <>
-            <Box boxType={'title'} isRow={false}>
-              <Description margins={'0 25px 0 0'} style={{ fontWeight: 500, color: '#37474F' }} textAlignRight={false}>
-                Gelato
-              </Description>
-              <Description
-                margins={'0 25px 0 0'}
-                textAlignRight={false}
-              >{`Automatically withdraw liquidity ${daysBeforeWithdraw} days before market ends`}</Description>
-            </Box>
+      <DescriptionWrapper>
+        <GelatoServiceDescription>
+          <ServiceWrapper>
+            <ServiceIconWrapper>
+              <GelatoIconCircle>
+                <IconGelato />
+              </GelatoIconCircle>
+            </ServiceIconWrapper>
+            <ServiceTokenDetails>
+              {!isScheduled && (
+                <>
+                  <ServiceTextWrapper>
+                    <TextHeading>Gelato</TextHeading>
+                    {active && !belowMinimum && (
+                      <TextBody margins={'6px 25px 0px 0px'}>
+                        Auto-Withdrawal scheduled in
+                        <TextBodyMarker> {daysUntilWithdraw} days </TextBodyMarker>
+                      </TextBody>
+                    )}
+                    {!active && (
+                      <TextBody margins={'6px 25px 0px 0px'}>
+                        Schedule withdrawal with min. funding of
+                        <TextBodyMarker>
+                          {`${
+                            minimum
+                              ? ` ${Math.ceil(minimum * 1000) / 1000} ${collateralSymbol}`
+                              : ` ${GELATO_MIN_USD_THRESH} USD`
+                          }`}
+                        </TextBodyMarker>
+                      </TextBody>
+                    )}
+                  </ServiceTextWrapper>
+                  {active && (
+                    <ServiceToggleWrapper onClick={toggleCustomizable}>
+                      <ToggleService isActive={customizable}>
+                        <IconCustomize />
+                      </ToggleService>
+                    </ServiceToggleWrapper>
+                  )}
+                  <ServiceCheckWrapper onClick={belowMinimum ? undefined : toggleActive}>
+                    <CheckService disabled={belowMinimum} isActive={active}>
+                      <IconTick
+                        disabled={belowMinimum}
+                        fill={belowMinimum ? '#86909E' : active ? 'white' : '#37474F'}
+                        stroke={belowMinimum ? '#86909E' : active ? 'white' : '#37474F'}
+                      />
+                    </CheckService>
+                  </ServiceCheckWrapper>
+                </>
+              )}
+              {isScheduled && taskStatus && (
+                <>
+                  <ServiceTextWrapper>
+                    <TextHeading>
+                      {`Auto-Withdraw ${
+                        taskStatus === 'execSuccess' ? '' : `${collateralToWithdraw} ${collateralSymbol}`
+                      }`}
+                    </TextHeading>
+                    <TextBody margins={'6px 25px 0px 0px'}>Powered by Gelato Network</TextBody>
+                  </ServiceTextWrapper>
+                  <TaskStatusWrapper>
+                    {getTaskStatus(taskStatus, gelatoData.input)}
 
-            {active && (
-              <ButtonCircleStyled active={true} disabled={false} filled={false} onClick={toggleCustomizable}>
-                <IconFilter />
-              </ButtonCircleStyled>
-            )}
-
-            {!active && (
-              <ButtonCircleStyled
-                active={true}
-                disabled={false}
-                filled={false}
-                onClick={toggleActive}
-                style={{ backgroundColor: 'white' }}
-              >
-                <IconStyled large={true}>
-                  <IconTick fill={'#757575'} />
-                </IconStyled>
-              </ButtonCircleStyled>
-            )}
-            {active && (
-              <ButtonCircleStyled filled={true} onClick={toggleActive}>
-                <IconStyled large={true}>
-                  <IconTick fill={'white'} selected={true} />
-                </IconStyled>
-              </ButtonCircleStyled>
-            )}
-          </>
-        )}
-        {isScheduled && taskStatus && (
-          <div style={{ display: 'flex', justifyContent: 'space-between', flexDirection: 'row', width: '100%' }}>
-            <Box boxType={'title'} isRow={false}>
-              <Description margins={'0 25px 0 0'} textAlignRight={false}>
-                <span style={{ fontWeight: 500, color: '#37474F' }}>
-                  {`Auto-Withdraw ${taskStatus === 'execSuccess' ? '' : `${collateralToWithdraw} ${collateralSymbol}`}`}
-                </span>
-              </Description>
-              <Description margins={'6px 0 0 0'} textAlignRight={false}>{`Powered by Gelato Network`}</Description>
-            </Box>
-
-            <Box boxType={'subtitle'} isRow={false}>
-              {getTaskStatus(taskStatus, gelatoData.input)}
-
-              <Description margins={'6px 0 0 0'} textAlignRight={true}>
-                {`${formatDate(gelatoData.input)}`}
-              </Description>
-            </Box>
-          </div>
-        )}
-        {belowMinimum && !taskStatus && (
-          <>
-            <Box boxType={'title'} isRow={false}>
-              <Description margins={'0 25px 0 0'} style={{ fontWeight: 500, color: '#37474F' }} textAlignRight={false}>
-                Gelato
-              </Description>
-              <Description margins={'0 25px 0 0'} textAlignRight={false}>
-                {`Schedule auto withdraw with minimum funding of ${
-                  minimum
-                    ? `${Math.ceil(minimum * 100000) / 100000} ${collateralSymbol}`
-                    : `${GELATO_MIN_USD_THRESH} USD`
-                }`}
-              </Description>
-            </Box>
-            <ButtonCircleStyled disabled={true} filled={false} style={{ backgroundColor: 'white' }}>
-              <IconStyled large={true}>
-                <IconTick disabled={true} fill={'#757575'} />
-              </IconStyled>
-            </ButtonCircleStyled>
-          </>
-        )}
-      </Box>
+                    <TextBody margins={'6px 0 0 0'} textAlignRight={true}>
+                      {`${formatDate(gelatoData.input)}`}
+                    </TextBody>
+                  </TaskStatusWrapper>
+                </>
+              )}
+            </ServiceTokenDetails>
+          </ServiceWrapper>
+        </GelatoServiceDescription>
+      </DescriptionWrapper>
       {taskStatus === 'awaitingExec' && (
-        <Box boxType={'outer'} isRow={false}>
-          <Description margins={'0 25px 0 0'} textAlignRight={false}>
+        <GelatoExtendedWrapper>
+          <TextBody margins={'0 25px 0 0'}>
             {`Gelato will automatically withdraw your liquidity of ${collateralToWithdraw} ${collateralSymbol} on ${formatDate(
               gelatoData.input,
             )} (with a network fee deducted from the withdrawn ${collateralSymbol}). Cancel the auto-withdraw by manually withdrawing your liquidity.`}
-          </Description>
-        </Box>
+          </TextBody>
+        </GelatoExtendedWrapper>
       )}
       {taskStatus === 'execReverted' && (
-        <Box boxType={'outer'} isRow={false}>
-          <Description margins={'0 25px 0 0'} textAlignRight={false}>
+        <GelatoExtendedWrapper>
+          <TextBody margins={'0 25px 0 0'}>
             {`Your provided liquidity was insufficient on ${formatDate(
               gelatoData.input,
             )} to pay for for the withdrawal transaction `}
@@ -352,12 +474,12 @@ export const GelatoScheduler: React.FC<GelatoSchedulerProps> = (props: GelatoSch
               </a>
             </span>
             {'.'}
-          </Description>
-        </Box>
+          </TextBody>
+        </GelatoExtendedWrapper>
       )}
       {taskStatus === 'execSuccess' && (
-        <Box boxType={'outer'} isRow={false}>
-          <Description margins={'0 25px 0 0'} textAlignRight={false}>
+        <GelatoExtendedWrapper>
+          <TextBody margins={'0 25px 0 0'}>
             {`Your provided liquidity was successfully withdrawn on ${formatDate(
               gelatoData.input,
             )}. Check out the transaction `}
@@ -367,26 +489,22 @@ export const GelatoScheduler: React.FC<GelatoSchedulerProps> = (props: GelatoSch
               </a>
             </span>
             {'.'}
-          </Description>
-        </Box>
+          </TextBody>
+        </GelatoExtendedWrapper>
       )}
-      {customizable && !taskStatus && (
-        <Box boxType={'outer'} isRow={false} isStretch={true}>
-          <Box boxType={'condition'} isRow={true}>
-            <Description descriptionType={'condition'} style={{ color: '#37474F' }}>
-              Withdraw Condition
-            </Description>
+      {customizable && active && !taskStatus && (
+        <GelatoExtendedWrapper isStretch={true}>
+          <ConditionWrapper>
+            <ConditionTitle>Withdraw Condition</ConditionTitle>
             <FormRow
               formField={
                 <GelatoConditions disabled={true} onChangeGelatoCondition={handleGelatoDataChange} value={gelatoData} />
               }
               style={{ marginTop: '0' }}
             />
-          </Box>
-          <Box boxType={'condition'} isRow={true}>
-            <Description descriptionType={'condition'} style={{ color: '#37474F' }}>
-              Withdraw Date and Time
-            </Description>
+          </ConditionWrapper>
+          <ConditionWrapper>
+            <ConditionTitle>Withdraw Date and Time</ConditionTitle>
             <FormRow
               formField={
                 <DateField
@@ -400,14 +518,14 @@ export const GelatoScheduler: React.FC<GelatoSchedulerProps> = (props: GelatoSch
               }
               style={{ marginTop: '0' }}
             />
-          </Box>
-          <Description margins={'0 0 0 0'} textAlignRight={false}>
+          </ConditionWrapper>
+          <TextBody>
             Gelato will automatically withdraw your liquidity
-            <span style={{ fontWeight: 500, color: '#37474F' }}>{` ${daysBeforeWithdraw} day(s) before `}</span>
+            <TextBodyMarker>{` ${daysBeforeWithdraw} day(s) before `}</TextBodyMarker>
             the market will close on
-            <span style={{ fontWeight: 500, color: '#37474F' }}>{` ${formatDate(gelatoData.input)}`}</span>
-          </Description>
-        </Box>
+            <TextBodyMarker>{` ${formatDate(gelatoData.input)}`}</TextBodyMarker>
+          </TextBody>
+        </GelatoExtendedWrapper>
       )}
     </Wrapper>
   )
