@@ -448,7 +448,7 @@ export const GelatoScheduler: React.FC<GelatoSchedulerProps> = (props: GelatoSch
       </DescriptionWrapper>
       {taskStatus === 'awaitingExec' && (
         <GelatoExtendedWrapper>
-          <TextBody margins={'0 25px 0 0'}>
+          <TextBody margins={'0 0 0 0'}>
             {`Gelato will automatically withdraw your liquidity of ${collateralToWithdraw} ${collateralSymbol} on ${formatDate(
               gelatoData.input,
             )} (with a network fee deducted from the withdrawn ${collateralSymbol}). Cancel the auto-withdraw by manually withdrawing your liquidity.`}
@@ -457,7 +457,7 @@ export const GelatoScheduler: React.FC<GelatoSchedulerProps> = (props: GelatoSch
       )}
       {taskStatus === 'execReverted' && (
         <GelatoExtendedWrapper>
-          <TextBody margins={'0 25px 0 0'}>
+          <TextBody margins={'0 0 0 0'}>
             {`Your provided liquidity was insufficient on ${formatDate(
               gelatoData.input,
             )} to pay for for the withdrawal transaction `}
@@ -472,7 +472,7 @@ export const GelatoScheduler: React.FC<GelatoSchedulerProps> = (props: GelatoSch
       )}
       {taskStatus === 'execSuccess' && (
         <GelatoExtendedWrapper>
-          <TextBody margins={'0 25px 0 0'}>
+          <TextBody margins={'0 0 0 0'}>
             {`Your provided liquidity was successfully withdrawn on ${formatDate(
               gelatoData.input,
             )}. Check out the transaction `}
