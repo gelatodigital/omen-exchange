@@ -34,8 +34,8 @@ const GelatoExtendedWrapper = styled.div<{ isStretch?: boolean }>`
   margin-top: 20px;
   padding-top: 16px;
   padding-bottom: 34px;
-  padding-right: 20px;
-  padding-left: 20px;
+  padding-right: 25px;
+  padding-left: 25px;
   border: 1px solid ${props => props.theme.borders.borderDisabled};
 `
 
