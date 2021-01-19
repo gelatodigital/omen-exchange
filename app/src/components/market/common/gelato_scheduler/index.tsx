@@ -21,9 +21,7 @@ const TaskInfoWrapper = styled.div`
 const TaskInfo = styled.div<{ color?: string }>`
   color: ${props => (props.color ? props.color : props.theme.colors.textColorLightish)};
   font-size: 14px;
-  letter-spacing: 0.2px;
-  line-height: 1.4;
-  margin: 0 0 0 0;
+  margin: 0 6px 0 0;
   text-align: left;
   vertical-align: middle;
   display: inline-block;
@@ -34,7 +32,7 @@ const GelatoExtendedWrapper = styled.div<{ isStretch?: boolean }>`
   align-items: ${props => (props.isStretch ? 'stretch' : 'center')};
   border-radius: 4px;
   margin-top: 20px;
-  padding-top: 12px;
+  padding-top: 16px;
   padding-bottom: 34px;
   padding-right: 20px;
   padding-left: 20px;
@@ -43,11 +41,14 @@ const GelatoExtendedWrapper = styled.div<{ isStretch?: boolean }>`
 
 const TaskStatusWrapper = styled.div`
   display: flex;
+  line-height: 16px;
+  font-size: 14px;
   flex-direction: column;
   align-items: flex-end;
   justify-content: center;
   margin-left: 8px;
   flex-wrap: nowrap;
+  width: 90%;
 `
 
 const ConditionWrapper = styled.div`
@@ -67,12 +68,11 @@ const ConditionTitle = styled.div`
   color: #37474f;
 `
 
-const IconStyled = styled.div<{ color?: string; large?: boolean }>`
+const IconStyled = styled.div`
   line-height: 1;
   svg {
-    fill: ${props => props.color};
-    width: ${props => (props.large ? '1.1rem' : '0.9rem')};
-    height: ${props => (props.large ? '1.1rem' : '0.9rem')};
+    width: 0.9rem;
+    height: 0.9rem;
     vertical-align: inherit;
   }
 `
@@ -177,8 +177,8 @@ const ServiceIconWrapper = styled.div`
   -webkit-box-align: center;
 `
 
-const ServiceTextWrapper = styled.div`
-  width: 90%;
+const ServiceTextWrapper = styled.div<{ short?: boolean }>`
+  width: ${props => (props.short ? '50%' : '90%')};
 `
 
 const ServiceCheckWrapper = styled.div`
@@ -207,10 +207,6 @@ const GelatoServiceDescription = styled.div`
 
 const TextHeading = styled.div`
   color: ${props => props.theme.colors.textColorDark};
-  width: 71px;
-  height: 16px;
-  left: 54px;
-  top: calc(50% - 16px / 2 - 11px);
   font-weight: 500;
   font-size: 14px;
   line-height: 16px;
@@ -218,6 +214,7 @@ const TextHeading = styled.div`
   align-items: center;
   letter-spacing: 0.2px;
   margin: 0px 6px 0px 0px;
+  width: 200px;
 `
 
 const TextBody = styled.div<{ margins?: string; textAlignRight?: boolean }>`
@@ -235,7 +232,6 @@ const TextBodyMarker = styled.span<{ color?: string }>`
 `
 
 export type GelatoSchedulerProps = DOMAttributes<HTMLDivElement> & {
-  noMarginBottom: boolean
   resolution: Date
   gelatoData: GelatoData
   isScheduled: boolean
@@ -261,10 +257,8 @@ export const GelatoScheduler: React.FC<GelatoSchedulerProps> = (props: GelatoSch
     handleGelatoDataInputChange,
     isScheduled,
     minimum,
-    noMarginBottom,
     resolution,
     taskStatus,
-    ...restProps
   } = props
 
   const [active, setActive] = React.useState(false)
@@ -367,7 +361,7 @@ export const GelatoScheduler: React.FC<GelatoSchedulerProps> = (props: GelatoSch
         case 'canceled':
           return (
             <TaskInfoWrapper>
-              <TaskInfo color="red">{`canceled`}</TaskInfo>
+              <TaskInfo color="red">{`canceled `}</TaskInfo>
               <IconStyled>
                 <IconAlert bg={'red'} fill={'white'}></IconAlert>
               </IconStyled>
@@ -432,17 +426,16 @@ export const GelatoScheduler: React.FC<GelatoSchedulerProps> = (props: GelatoSch
               )}
               {isScheduled && taskStatus && (
                 <>
-                  <ServiceTextWrapper>
+                  <ServiceTextWrapper short={true}>
                     <TextHeading>
                       {`Auto-Withdraw ${
                         taskStatus === 'execSuccess' ? '' : `${collateralToWithdraw} ${collateralSymbol}`
                       }`}
                     </TextHeading>
-                    <TextBody margins={'6px 25px 0px 0px'}>Powered by Gelato Network</TextBody>
+                    <TextBody margins={'6px 0px 0px 0px'}>Powered by Gelato Network</TextBody>
                   </ServiceTextWrapper>
                   <TaskStatusWrapper>
                     {getTaskStatus(taskStatus, gelatoData.input)}
-
                     <TextBody margins={'6px 0 0 0'} textAlignRight={true}>
                       {`${formatDate(gelatoData.input)}`}
                     </TextBody>

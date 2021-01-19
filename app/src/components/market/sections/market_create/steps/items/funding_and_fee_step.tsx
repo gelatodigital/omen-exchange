@@ -547,7 +547,6 @@ const FundingAndFeeStep: React.FC<Props> = (props: Props) => {
             handleGelatoDataInputChange={handleGelatoDataInputChange}
             isScheduled={false}
             minimum={gelatoMinimum}
-            noMarginBottom={false}
             resolution={values.resolution !== null ? values.resolution : new Date()}
           />
         )}

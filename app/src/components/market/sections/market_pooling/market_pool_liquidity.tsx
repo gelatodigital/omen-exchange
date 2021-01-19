@@ -720,7 +720,6 @@ const MarketPoolLiquidityWrapper: React.FC<Props> = (props: Props) => {
           }}
           isScheduled={submittedTaskReceiptWrapper ? true : false}
           minimum={gelatoMinimum}
-          noMarginBottom={false}
           resolution={resolutionDate !== null ? marketMakerData.question.resolution : new Date()}
           taskStatus={submittedTaskReceiptWrapper ? submittedTaskReceiptWrapper.status : undefined}
         />
